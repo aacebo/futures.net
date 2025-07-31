@@ -50,6 +50,12 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
     protected readonly TaskCompletionSource<TOut> Source;
     protected readonly List<(Guid, Subscriber<TOut>)> Subscribers = [];
 
+    public Future(CancellationToken cancellation = default)
+    {
+        Resolver = _ => throw new NotImplementedException();
+        Source = new(cancellation);
+    }
+
     public Future(Func<TIn, TOut> resolve, CancellationToken cancellation = default)
     {
         Resolver = resolve;
