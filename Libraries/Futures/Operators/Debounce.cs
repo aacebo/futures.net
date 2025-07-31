@@ -4,24 +4,22 @@ public static partial class FutureOperatorExtensions
 {
     public static IFuture<TIn, TOut> Debounce<TIn, TOut>(this IFuture<TIn, TOut> future, TimeSpan time)
     {
-        CancellationTokenSource? cancellation = null;
+        CancellationTokenSource? cancellation = new();
 
-        return new Future<TIn, TOut>(value =>
+        return new Future<TIn, TOut>((value, subscriber) =>
         {
-            cancellation?.Cancel();
+            cancellation.Cancel();
             cancellation = new();
 
-            return Task.Run(async () =>
+            _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
             {
-                var delay = Task.Delay(time, cancellation.Token);
-                await delay;
-
-                if (cancellation.IsCancellationRequested)
+                if (task.IsCanceled)
                 {
-                    throw new CancelledException();
+                    return;
                 }
 
-                return future.Next(value);
+                subscriber.Next(future.Next(value));
+                subscriber.Complete();
             });
         });
     }
