@@ -8,7 +8,7 @@ public class WhereTests
     [Fact]
     public void Should_Filter_List()
     {
-        var future = new List<int>().Pipe().Where(v => v >= 1000);
+        var future = new List<int>().Pipe(v => v.Select(o => (float)o)).Where(v => v >= 1000);
         Assert.True(future.Next([100, 200, 50000, -500]).SequenceEqual([50000]));
     }
 

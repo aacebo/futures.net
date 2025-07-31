@@ -2,49 +2,57 @@ namespace Futures.Operators;
 
 public static partial class OperatorExtensions
 {
-    public static IFuture<IEnumerable<TItem>, IEnumerable<TItem>> Where<TItem>(this IFuture<IEnumerable<TItem>, IEnumerable<TItem>> future, Func<TItem, bool> predicate)
+    public static IFuture<IEnumerable<TIn>, IEnumerable<TOut>> Where<TIn, TOut>(this IFuture<IEnumerable<TIn>, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
     {
-        return new Future<IEnumerable<TItem>, IEnumerable<TItem>>(value =>
+        return new Future<IEnumerable<TIn>, IEnumerable<TOut>>(value =>
         {
             return future.Next(value).Where(predicate);
         });
     }
 
-    public static IFuture<ICollection<TItem>, IEnumerable<TItem>> Where<TItem>(this IFuture<ICollection<TItem>, ICollection<TItem>> future, Func<TItem, bool> predicate)
+    public static IFuture<ICollection<TIn>, IEnumerable<TOut>> Where<TIn, TOut>(this IFuture<ICollection<TIn>, ICollection<TOut>> future, Func<TOut, bool> predicate)
     {
-        return new Future<ICollection<TItem>, IEnumerable<TItem>>(value =>
+        return new Future<ICollection<TIn>, IEnumerable<TOut>>(value =>
         {
             return future.Next(value).Where(predicate);
         });
     }
 
-    public static IFuture<IDictionary<TKey, TValue>, IEnumerable<KeyValuePair<TKey, TValue>>> Where<TKey, TValue>(this IFuture<IDictionary<TKey, TValue>, IDictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate)
+    public static IFuture<IDictionary<TKeyIn, TValueIn>, IEnumerable<KeyValuePair<TKeyOut, TValueOut>>> Where<TKeyIn, TValueIn, TKeyOut, TValueOut>(this IFuture<IDictionary<TKeyIn, TValueIn>, IDictionary<TKeyOut, TValueOut>> future, Func<KeyValuePair<TKeyOut, TValueOut>, bool> predicate) where TKeyIn : notnull where TKeyOut : notnull
     {
-        return new Future<IDictionary<TKey, TValue>, IEnumerable<KeyValuePair<TKey, TValue>>>(value =>
+        return new Future<IDictionary<TKeyIn, TValueIn>, IEnumerable<KeyValuePair<TKeyOut, TValueOut>>>(value =>
         {
             return future.Next(value).Where(predicate);
         });
     }
 
-    public static IFuture<Dictionary<TKey, TValue>, IEnumerable<KeyValuePair<TKey, TValue>>> Where<TKey, TValue>(this IFuture<Dictionary<TKey, TValue>, Dictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
+    public static IFuture<Dictionary<TKeyIn, TValueIn>, IEnumerable<KeyValuePair<TKeyOut, TValueOut>>> Where<TKeyIn, TValueIn, TKeyOut, TValueOut>(this IFuture<Dictionary<TKeyIn, TValueIn>, Dictionary<TKeyOut, TValueOut>> future, Func<KeyValuePair<TKeyOut, TValueOut>, bool> predicate) where TKeyIn : notnull where TKeyOut : notnull
     {
-        return new Future<Dictionary<TKey, TValue>, IEnumerable<KeyValuePair<TKey, TValue>>>(value =>
+        return new Future<Dictionary<TKeyIn, TValueIn>, IEnumerable<KeyValuePair<TKeyOut, TValueOut>>>(value =>
         {
             return future.Next(value).Where(predicate);
         });
     }
 
-    public static IFuture<IList<TItem>, IEnumerable<TItem>> Where<TItem>(this IFuture<IList<TItem>, IList<TItem>> future, Func<TItem, bool> predicate)
+    public static IFuture<IList<TIn>, IEnumerable<TOut>> Where<TIn, TOut>(this IFuture<IList<TIn>, IList<TOut>> future, Func<TOut, bool> predicate)
     {
-        return new Future<IList<TItem>, IEnumerable<TItem>>(value =>
+        return new Future<IList<TIn>, IEnumerable<TOut>>(value =>
         {
             return future.Next(value).Where(predicate);
         });
     }
 
-    public static IFuture<List<TItem>, IEnumerable<TItem>> Where<TItem>(this IFuture<List<TItem>, List<TItem>> future, Func<TItem, bool> predicate)
+    public static IFuture<List<TIn>, IEnumerable<TOut>> Where<TIn, TOut>(this IFuture<List<TIn>, List<TOut>> future, Func<TOut, bool> predicate)
     {
-        return new Future<List<TItem>, IEnumerable<TItem>>(value =>
+        return new Future<List<TIn>, IEnumerable<TOut>>(value =>
+        {
+            return future.Next(value).Where(predicate);
+        });
+    }
+
+    public static IFuture<List<TIn>, IEnumerable<TOut>> Where<TIn, TOut>(this IFuture<List<TIn>, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
+    {
+        return new Future<List<TIn>, IEnumerable<TOut>>(value =>
         {
             return future.Next(value).Where(predicate);
         });

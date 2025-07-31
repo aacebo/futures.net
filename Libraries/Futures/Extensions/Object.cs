@@ -7,9 +7,9 @@ public static partial class ObjectExtensions
         return new Future<T, T>(value => value);
     }
 
-    public static IFuture<T, T> Pipe<T>(this T _, Func<T, T> next)
+    public static IFuture<TIn, TOut> Pipe<TIn, TOut>(this TIn _, Func<TIn, TOut> next)
     {
-        return new Future<T, T>(value =>
+        return new Future<TIn, TOut>(value =>
         {
             return next(value);
         });
