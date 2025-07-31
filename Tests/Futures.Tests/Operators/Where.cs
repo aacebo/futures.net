@@ -8,14 +8,21 @@ public class WhereTests
     [Fact]
     public void Should_Filter_List()
     {
-        var future = new List<int>().Pipe(v => v.Select(o => (float)o)).Where(v => v >= 1000);
+        var future = new List<int>()
+            .Pipe(v => v.Select(o => (float)o))
+            .Where(v => v >= 1000);
+
         Assert.True(future.Next([100, 200, 50000, -500]).SequenceEqual([50000]));
     }
 
     [Fact]
     public void Should_Filter_Dictionary()
     {
-        var future = new Dictionary<int, string>().Pipe().Where(v => v.Key > 3).Pipe(v => v.Select(o => o.Value));
+        var future = new Dictionary<int, string>()
+            .Pipe()
+            .Where(v => v.Key > 3)
+            .Pipe(v => v.Select(o => o.Value));
+
         Assert.True(
             future.Next(new()
             {
