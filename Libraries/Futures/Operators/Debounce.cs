@@ -1,6 +1,6 @@
 namespace Futures.Operators;
 
-public static partial class FutureOperatorExtensions
+public static partial class OperatorExtensions
 {
     public static IFuture<TIn, TOut> Debounce<TIn, TOut>(this IFuture<TIn, TOut> future, TimeSpan time)
     {

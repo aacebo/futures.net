@@ -1,6 +1,6 @@
 namespace Futures.Operators;
 
-public static partial class FutureOperatorExtensions
+public static partial class OperatorExtensions
 {
     public static IFuture<TIn, TOut> Catch<TIn, TOut>(this IFuture<TIn, TOut> future, Func<Exception, TIn, TOut> next)
     {

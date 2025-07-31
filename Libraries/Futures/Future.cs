@@ -1,8 +1,8 @@
 namespace Futures;
 
-public delegate void FutureResolver<TIn, TOut>(TIn value, Subscriber<TOut> subscriber);
+public delegate void ResolveCallback<TIn, TOut>(TIn value, Subscriber<TOut> subscriber);
 
-public partial class Future<T> : Future<T, T>
+public partial class Future<T> : Future<T, T>, IFuture<T>, IFuture<T, T>
 {
     public Future(CancellationToken cancellation = default) : base(value => value, cancellation)
     {
@@ -12,6 +12,11 @@ public partial class Future<T> : Future<T, T>
     public Future(T value, CancellationToken cancellation = default) : base(value => value, cancellation)
     {
         Next(value);
+    }
+
+    public Future(Func<T, T> resolve, CancellationToken cancellation = default) : base(resolve, cancellation)
+    {
+
     }
 
     public static Future<T> From(T value)
@@ -69,7 +74,7 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         Source = new(cancellation);
     }
 
-    public Future(FutureResolver<TIn, TOut> resolve, CancellationToken cancellation = default)
+    public Future(ResolveCallback<TIn, TOut> resolve, CancellationToken cancellation = default)
     {
         Source = new(cancellation);
         Resolver = (input) =>

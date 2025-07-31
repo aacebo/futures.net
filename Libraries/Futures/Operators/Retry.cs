@@ -1,6 +1,6 @@
 namespace Futures.Operators;
 
-public static partial class FutureOperatorExtensions
+public static partial class OperatorExtensions
 {
     public static IFuture<TIn, TOut> Retry<TIn, TOut>(this IFuture<TIn, TOut> future, int attempts = 3)
     {
