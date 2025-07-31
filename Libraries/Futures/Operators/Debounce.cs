@@ -23,4 +23,9 @@ public static partial class FutureOperatorExtensions
             });
         });
     }
+
+    public static IFuture<TIn, TOut> Debounce<TIn, TOut>(this IFuture<TIn, TOut> future, int ms)
+    {
+        return Debounce(future, TimeSpan.FromMilliseconds(ms));
+    }
 }
