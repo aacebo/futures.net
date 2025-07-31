@@ -9,6 +9,6 @@ public class CancelledException : Exception
 
     public CancelledException(string message) : base(message)
     {
-        
+
     }
 }

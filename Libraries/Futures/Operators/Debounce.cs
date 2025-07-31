@@ -8,7 +8,7 @@ public static partial class FutureOperatorExtensions
 
         return new Future<TIn, TOut>(value =>
         {
-            cancellation?.Cancel(true);
+            cancellation?.Cancel();
             cancellation = new();
 
             return Task.Run(async () =>
@@ -16,7 +16,7 @@ public static partial class FutureOperatorExtensions
                 var delay = Task.Delay(time, cancellation.Token);
                 await delay;
 
-                if (delay.IsCanceled)
+                if (cancellation.IsCancellationRequested)
                 {
                     throw new CancelledException();
                 }

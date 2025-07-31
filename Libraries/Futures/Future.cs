@@ -1,5 +1,7 @@
 namespace Futures;
 
+public delegate void FutureResolver<TIn, TOut>(TIn value, Subscriber<TOut> subscriber);
+
 public partial class Future<T> : Future<T, T>
 {
     public Future(CancellationToken cancellation = default) : base(value => value, cancellation)
@@ -65,6 +67,25 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
     {
         Resolver = (input) => resolve(input).Resolve();
         Source = new(cancellation);
+    }
+
+    public Future(FutureResolver<TIn, TOut> resolve, CancellationToken cancellation = default)
+    {
+        Source = new(cancellation);
+        Resolver = (input) =>
+        {
+            var future = new Future<TOut>();
+
+            resolve(input, new()
+            {
+                OnNext = value => future.Next(value),
+                OnComplete = () => future.Complete(),
+                OnError = ex => future.Error(ex),
+                OnCancel = () => future.Cancel(),
+            });
+
+            return future.Resolve();
+        };
     }
 
     ~Future()
