@@ -9,7 +9,7 @@ public class DebounceTests
     {
         var future = new Future<int>()
             .Pipe(value => value + 1)
-            .Debounce(TimeSpan.FromMilliseconds(200));
+            .Debounce(200);
 
         future.Subscribe(new()
         {
