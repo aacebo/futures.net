@@ -1,6 +1,6 @@
-using Futures;
+using Chat = OpenAI.Chat;
 
-namespace OpenAI.Futures;
+namespace Futures.OpenAI;
 
 public class ChatCompletion : Future<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion>, IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion>
 {

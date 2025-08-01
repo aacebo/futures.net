@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\Futures\Futures.csproj" />
-    <ProjectReference Include="..\..\Libraries\OpenAI.Futures\OpenAI.Futures.csproj" />
+    <ProjectReference Include="..\..\Libraries\Futures.OpenAI\Futures.OpenAI.csproj" />
   </ItemGroup>
 
 </Project>

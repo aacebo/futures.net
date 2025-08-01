@@ -1,8 +1,8 @@
 #pragma warning disable OPENAI001
 
-using Futures;
+using Responses = OpenAI.Responses;
 
-namespace OpenAI.Futures;
+namespace Futures.OpenAI;
 
 public class Response : Future<Responses.ResponseCreationOptions, Responses.OpenAIResponse>, IFuture<Responses.ResponseCreationOptions, Responses.OpenAIResponse>
 {

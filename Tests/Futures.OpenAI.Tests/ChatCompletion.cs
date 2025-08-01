@@ -1,6 +1,6 @@
-﻿using Futures.Operators;
+﻿using OpenAI;
 
-namespace OpenAI.Futures.Tests;
+namespace Futures.OpenAI.Tests;
 
 public class ChatCompletionTests
 {
