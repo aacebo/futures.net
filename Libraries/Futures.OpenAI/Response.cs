@@ -1,5 +1,3 @@
-#pragma warning disable OPENAI001
-
 using Responses = OpenAI.Responses;
 
 namespace Futures.OpenAI;
