@@ -15,12 +15,12 @@ public class ChatCompletionTests
     {
         _client = new Mock<Chat.ChatClient>();
         _client.Setup(client =>
-            client.CompleteChatAsync(
+            client.CompleteChat(
                 It.IsAny<IEnumerable<Chat.ChatMessage>>(),
                 It.IsAny<Chat.ChatCompletionOptions?>(),
                 It.IsAny<CancellationToken>()
             )
-        ).ReturnsAsync(ClientResult.FromValue(
+        ).Returns(ClientResult.FromValue(
             Chat.OpenAIChatModelFactory.ChatCompletion(
                 role: Chat.ChatMessageRole.Assistant,
                 content: new Chat.ChatMessageContent("hi!")
@@ -42,8 +42,7 @@ public class ChatCompletionTests
     [Fact]
     public void Should_StoreMessages()
     {
-        var chat = new ChatCompletion(_client.Object)
-            .AutoMessageStorage();
+        var chat = new ChatCompletion(_client.Object).Storage();
 
         chat.Next("hi");
         var (messages, message, _) = chat.Complete();
