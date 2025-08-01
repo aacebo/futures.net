@@ -134,6 +134,11 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         return output;
     }
 
+    public virtual Task<TOut> NextAsync(TIn value)
+    {
+        return Task.FromResult(Next(value));
+    }
+
     public virtual TOut Complete()
     {
         if (Value is null)
@@ -157,6 +162,11 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         return Value;
     }
 
+    public virtual Task<TOut> CompleteAsync()
+    {
+        return Task.FromResult(Complete());
+    }
+
     public virtual void Error(Exception ex)
     {
         if (IsComplete)
@@ -173,6 +183,12 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         }
     }
 
+    public virtual Task ErrorAsync(Exception ex)
+    {
+        Error(ex);
+        return Task.CompletedTask;
+    }
+
     public virtual void Cancel()
     {
         if (IsComplete)
@@ -187,6 +203,12 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         {
             subscriber.Cancel();
         }
+    }
+
+    public virtual Task CancelAsync()
+    {
+        Cancel();
+        return Task.CompletedTask;
     }
 
     public virtual TOut Resolve()

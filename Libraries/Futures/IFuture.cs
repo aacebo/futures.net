@@ -13,9 +13,13 @@ public interface IFuture<TIn, TOut> : IDisposable
     public bool IsCancelled { get; }
 
     public TOut Next(TIn input);
+    public Task<TOut> NextAsync(TIn input);
     public TOut Complete();
+    public Task<TOut> CompleteAsync();
     public void Error(Exception ex);
+    public Task ErrorAsync(Exception ex);
     public void Cancel();
+    public Task CancelAsync();
 
     public TOut Resolve();
     public Task<TOut> ResolveAsync();
