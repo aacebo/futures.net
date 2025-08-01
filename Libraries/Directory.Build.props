@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Product>Futures</Product>
+    <Product>Futures.Net</Product>
     <Version>0.0.1</Version>
     <Authors>Alexander Acebo</Authors>
     <Company>Microsoft</Company>

@@ -3,7 +3,7 @@
   <Import Project="..\Directory.Build.props" Condition="'$(Version)' == ''" />
 
   <PropertyGroup>
-    <PackageId>Futures</PackageId>
+    <PackageId>Futures.Net</PackageId>
     <PackageDescription>Async Streaming Utilities</PackageDescription>
     <PackageProjectUrl>https://www.github.com/aacebo/futures.net</PackageProjectUrl>
     <PackageTags>future;stream;promise;async</PackageTags>
