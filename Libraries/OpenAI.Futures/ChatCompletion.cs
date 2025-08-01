@@ -37,17 +37,17 @@ public static partial class IFutureExtensions
         });
     }
 
-    public static Chat.ChatCompletion Next(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion> future, params Chat.ChatMessage[] messages)
+    public static TOut Next<TOut>(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), TOut> future, params Chat.ChatMessage[] messages)
     {
         return future.Next((messages, null));
     }
 
-    public static Chat.ChatCompletion Next(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion> future, params string[] messages)
+    public static TOut Next<TOut>(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), TOut> future, params string[] messages)
     {
         return future.Next(messages.Select(m => new Chat.UserChatMessage(m)).ToArray());
     }
 
-    public static Chat.ChatCompletion Next(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion> future, IEnumerable<Chat.ChatMessage> messages, Chat.ChatCompletionOptions options)
+    public static TOut Next<TOut>(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), TOut> future, IEnumerable<Chat.ChatMessage> messages, Chat.ChatCompletionOptions options)
     {
         return future.Next((messages, options));
     }

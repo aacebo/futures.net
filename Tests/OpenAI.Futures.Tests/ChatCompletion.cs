@@ -12,7 +12,7 @@ public class ChatCompletionTests
         var completion = new ChatCompletion(client.GetChatClient("gpt-3.5-turbo"))
             .Pipe(res => res.Content.FirstOrDefault()?.Text);
 
-        completion.Next((["hi"], new()));
+        completion.Next("hi");
         completion.Complete();
         Console.WriteLine(completion.Resolve());
 
