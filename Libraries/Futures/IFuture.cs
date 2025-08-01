@@ -22,6 +22,7 @@ public interface IFuture<TIn, TOut> : IDisposable
 
     public IFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next);
     public IFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);
+    public IFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next);
 
     public Subscription Subscribe(Subscriber<TOut> subscriber);
     public void UnSubscribe(Guid id);

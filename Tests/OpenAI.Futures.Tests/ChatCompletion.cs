@@ -1,4 +1,4 @@
-﻿#pragma warning disable OPENAI001
+﻿using Futures.Operators;
 
 namespace OpenAI.Futures.Tests;
 
@@ -7,15 +7,19 @@ public class ChatCompletionTests
     [Fact]
     public void Should_CreateFuture()
     {
-        var client = new OpenAIClient("");
-        var completion = new ChatCompletion(client.GetChatClient(""))
-            .Function("test", "a test function", BinaryData.FromString("{}"))
+        var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        var client = new OpenAIClient(apiKey);
+        var completion = new ChatCompletion(client.GetChatClient("gpt-3.5-turbo"))
             .Pipe(res => res.Content.FirstOrDefault()?.Text);
 
-        var response = new Response(client.GetOpenAIResponseClient(""))
-            .Function("b", "b function", BinaryData.FromString("{}"))
-            .Pipe(res => res.OutputItems.FirstOrDefault()?.ToString());
+        completion.Next((["hi"], new()));
+        completion.Complete();
+        Console.WriteLine(completion.Resolve());
 
-        completion.Pipe(text => response.Next(new()));
+        // var response = new Response(client.GetOpenAIResponseClient(""))
+        //     .Function("b", "b function", BinaryData.FromString("{}"))
+        //     .Pipe(res => res.OutputItems.FirstOrDefault()?.ToString());
+
+        // completion.Pipe(text => response.Next(new()));
     }
 }
