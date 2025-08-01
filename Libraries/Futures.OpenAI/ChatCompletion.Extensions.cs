@@ -29,6 +29,26 @@ public static partial class IFutureExtensions
         });
     }
 
+    public static IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), (IEnumerable<Chat.ChatMessage>, Chat.AssistantChatMessage, Chat.ChatCompletion)> AutoMessageStorage(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), Chat.ChatCompletion> future)
+    {
+        List<Chat.ChatMessage> messages = [];
+
+        return new Future<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), (IEnumerable<Chat.ChatMessage>, Chat.AssistantChatMessage, Chat.ChatCompletion)>(args =>
+        {
+            var (input, options) = args;
+
+            foreach (var message in input)
+            {
+                messages.Add(message);
+            }
+
+            var completion = future.Next((messages, options));
+            var assistantMessage = Chat.ChatMessage.CreateAssistantMessage(completion);
+            messages.Add(assistantMessage);
+            return (messages, assistantMessage, completion);
+        });
+    }
+
     public static TOut Next<TOut>(this IFuture<(IEnumerable<Chat.ChatMessage>, Chat.ChatCompletionOptions?), TOut> future, params Chat.ChatMessage[] messages)
     {
         return future.Next((messages, null));

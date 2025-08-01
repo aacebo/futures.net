@@ -1,25 +1,36 @@
-﻿using OpenAI;
+﻿using System.Text.Json;
+
+using OpenAI;
 
 namespace Futures.OpenAI.Tests;
 
 public class ChatCompletionTests
 {
+    private readonly OpenAIClient _client;
+
+    public ChatCompletionTests()
+    {
+        _client = new OpenAIClient(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+    }
+
     [Fact]
     public void Should_CreateFuture()
     {
-        var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-        var client = new OpenAIClient(apiKey);
-        var completion = new ChatCompletion(client.GetChatClient("gpt-3.5-turbo"))
+        var completion = new ChatCompletion(_client.GetChatClient("gpt-3.5-turbo"))
             .Pipe(res => res.Content.FirstOrDefault()?.Text);
 
         completion.Next("hi");
         completion.Complete();
-        Console.WriteLine(completion.Resolve());
+    }
 
-        // var response = new Response(client.GetOpenAIResponseClient(""))
-        //     .Function("b", "b function", BinaryData.FromString("{}"))
-        //     .Pipe(res => res.OutputItems.FirstOrDefault()?.ToString());
+    [Fact]
+    public void Should_StoreMessages()
+    {
+        var chat = new ChatCompletion(_client.GetChatClient("gpt-3.5-turbo"))
+            .AutoMessageStorage();
 
-        // completion.Pipe(text => response.Next(new()));
+        chat.Next("hi");
+        var (messages, _, _) = chat.Complete();
+        Assert.Equal(2, messages.Count());
     }
 }

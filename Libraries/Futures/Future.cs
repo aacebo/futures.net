@@ -39,6 +39,7 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
     public Guid Id { get; } = Guid.NewGuid();
     public State State { get; private set; } = State.NotStarted;
     public TOut Value { get; private set; } = default!;
+    public CancellationToken Token { get; private set; }
 
     public bool IsComplete => IsSuccess || IsError || IsCancelled;
     public bool IsStarted => State == State.Started;
@@ -53,35 +54,41 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
     public Future(CancellationToken cancellation = default)
     {
         Resolver = _ => throw new NotImplementedException();
+        Token = cancellation;
         Source = new(cancellation);
     }
 
     public Future(Func<TIn, TOut> resolve, CancellationToken cancellation = default)
     {
         Resolver = resolve;
+        Token = cancellation;
         Source = new(cancellation);
     }
 
     public Future(Func<TIn, Task<TOut>> resolve, CancellationToken cancellation = default)
     {
         Resolver = (input) => resolve(input).ConfigureAwait(false).GetAwaiter().GetResult();
+        Token = cancellation;
         Source = new(cancellation);
     }
 
     public Future(Func<TIn, IFuture<TOut>> resolve, CancellationToken cancellation = default)
     {
         Resolver = (input) => resolve(input).Resolve();
+        Token = cancellation;
         Source = new(cancellation);
     }
 
     public Future(Func<TIn, IFuture<TIn, TOut>> resolve, CancellationToken cancellation = default)
     {
         Resolver = (input) => resolve(input).Resolve();
+        Token = cancellation;
         Source = new(cancellation);
     }
 
     public Future(ResolveCallback<TIn, TOut> resolve, CancellationToken cancellation = default)
     {
+        Token = cancellation;
         Source = new(cancellation);
         Resolver = (input) =>
         {
@@ -109,6 +116,11 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         foreach (var (_, subscriber) in Subscribers)
         {
             subscriber.Dispose();
+        }
+
+        if (!IsComplete)
+        {
+            Cancel();
         }
 
         Source.Task.Dispose();

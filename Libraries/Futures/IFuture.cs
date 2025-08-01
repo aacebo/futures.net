@@ -5,6 +5,7 @@ public interface IFuture<TIn, TOut> : IDisposable
     public Guid Id { get; }
     public State State { get; }
     public TOut Value { get; }
+    public CancellationToken Token { get; }
 
     public bool IsComplete { get; }
     public bool IsStarted { get; }
