@@ -1,29 +1,31 @@
 ﻿using System.ClientModel;
 using System.ClientModel.Primitives;
 
+using Futures.OpenAI.Chat;
+
 using Moq;
 
-using Chat = OpenAI.Chat;
+using OAI = OpenAI.Chat;
 
-namespace Futures.OpenAI.Tests;
+namespace Futures.OpenAI.Tests.Chat;
 
 public class ChatCompletionTests
 {
-    private readonly Mock<Chat.ChatClient> _client;
+    private readonly Mock<OAI.ChatClient> _client;
 
     public ChatCompletionTests()
     {
-        _client = new Mock<Chat.ChatClient>();
+        _client = new Mock<OAI.ChatClient>();
         _client.Setup(client =>
             client.CompleteChat(
-                It.IsAny<IEnumerable<Chat.ChatMessage>>(),
-                It.IsAny<Chat.ChatCompletionOptions?>(),
+                It.IsAny<IEnumerable<OAI.ChatMessage>>(),
+                It.IsAny<OAI.ChatCompletionOptions?>(),
                 It.IsAny<CancellationToken>()
             )
         ).Returns(ClientResult.FromValue(
-            Chat.OpenAIChatModelFactory.ChatCompletion(
-                role: Chat.ChatMessageRole.Assistant,
-                content: new Chat.ChatMessageContent("hi!")
+            OAI.OpenAIChatModelFactory.ChatCompletion(
+                role: OAI.ChatMessageRole.Assistant,
+                content: new OAI.ChatMessageContent("hi!")
             ),
             Mock.Of<PipelineResponse>()
         ));

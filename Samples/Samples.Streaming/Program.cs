@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-using Futures.OpenAI;
+using Futures.OpenAI.Chat;
 
 using OpenAI;
 
