@@ -4,7 +4,8 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), (IEnumerable<OAI.ChatMessage>, OAI.AssistantChatMessage, OAI.ChatCompletion)> Storage(
+    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), (IEnumerable<OAI.ChatMessage>, OAI.AssistantChatMessage, OAI.ChatCompletion)> Storage
+    (
         this IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), OAI.ChatCompletion> future,
         IList<OAI.ChatMessage>? messages = null
     )

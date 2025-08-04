@@ -14,7 +14,8 @@ public static partial class ChatCompletionExtensions
         return future.Next(messages.Select(m => new OAI.UserChatMessage(m)).ToArray());
     }
 
-    public static TOut Next<TOut>(
+    public static TOut Next<TOut>
+    (
         this IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), TOut> future,
         IEnumerable<OAI.ChatMessage> messages,
         OAI.ChatCompletionOptions options

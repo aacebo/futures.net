@@ -34,7 +34,7 @@ public class ChatCompletionTests
     [Fact]
     public void Should_CreateFuture()
     {
-        var completion = new ChatCompletion(_client.Object)
+        var completion = Providers.From.Chat(_client.Object)
             .Pipe(res => res.Content.FirstOrDefault()?.Text);
 
         Assert.Equal("hi!", completion.Next("hi"));
@@ -44,7 +44,7 @@ public class ChatCompletionTests
     [Fact]
     public void Should_StoreMessages()
     {
-        var chat = new ChatCompletion(_client.Object).Storage();
+        var chat = Providers.From.Chat(_client.Object).Storage();
 
         chat.Next("hi");
         var (messages, message, _) = chat.Complete();
