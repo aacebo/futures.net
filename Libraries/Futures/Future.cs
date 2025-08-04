@@ -127,6 +127,12 @@ public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
         GC.SuppressFinalize(this);
     }
 
+    public virtual ValueTask DisposeAsync()
+    {
+        Dispose();
+        return default;
+    }
+
     public virtual TOut Next(TIn value)
     {
         if (IsComplete)
