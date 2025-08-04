@@ -59,3 +59,35 @@ public partial class ReadOnlyFuture<TIn, TOut> : FutureBase<TOut>, IReadOnlyFutu
         return new ReadOnlyFuture<TIn, TNext>(_future.Pipe(next));
     }
 }
+
+/// <summary>
+/// a future that is readonly, ie it can only be used
+/// to read emitted data
+/// </summary>
+/// <typeparam name="T1">the input type</typeparam>
+/// <typeparam name="T2">the second input type</typeparam>
+/// <typeparam name="TOut">the output type</typeparam>
+public partial class ReadOnlyFuture<T1, T2, TOut> : FutureBase<TOut>, IReadOnlyFuture<TOut>
+{
+    protected readonly IFuture<T1, T2, TOut> _future;
+
+    public ReadOnlyFuture(IFuture<T1, T2, TOut> future, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _future = future;
+    }
+
+    public IReadOnlyFuture<TNext> Pipe<TNext>(Func<TOut, TNext> next)
+    {
+        return new ReadOnlyFuture<T1, T2, TNext>(_future.Pipe(next));
+    }
+
+    public IReadOnlyFuture<TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next)
+    {
+        return new ReadOnlyFuture<T1, T2, TNext>(_future.Pipe(next));
+    }
+
+    public IReadOnlyFuture<TNext> Pipe<TNext>(IFuture<TOut, TNext> next)
+    {
+        return new ReadOnlyFuture<T1, T2, TNext>(_future.Pipe(next));
+    }
+}

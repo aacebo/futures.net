@@ -11,4 +11,14 @@ public static partial class OperatorExtensions
             return output;
         });
     }
+
+    public static IFuture<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this IFuture<T1, T2, TOut> future, IFuture<TOut, TNext> next)
+    {
+        return new Future<T1, T2, TOut>((a, b) =>
+        {
+            var output = future.Next(a, b);
+            next.Next(output);
+            return output;
+        });
+    }
 }

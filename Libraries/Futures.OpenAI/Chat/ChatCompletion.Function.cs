@@ -4,9 +4,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), TOut> Function<TOut, TParams>
+    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> Function<TOut, TParams>
     (
-        this IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), TOut> future,
+        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,
@@ -20,11 +20,11 @@ public static partial class ChatCompletionExtensions
             strict
         );
 
-        return new Future<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), TOut>(args =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut>((messages, opts) =>
         {
-            var options = args.Item2 ?? new();
+            var options = opts ?? new();
             options.Tools.Add(tool);
-            return future.Next(args.Item1, options);
+            return future.Next(messages, options);
         });
     }
 }
