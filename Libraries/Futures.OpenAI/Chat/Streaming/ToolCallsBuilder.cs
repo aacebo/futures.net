@@ -7,8 +7,10 @@ namespace Futures.OpenAI.Chat.Streaming;
 /// <summary>
 /// https://github.com/openai/openai-dotnet/blob/main/examples/Chat/Example04_FunctionCallingStreaming.cs#L18
 /// </summary>
-public class StreamingChatToolCallsBuilder
+public class ToolCallsBuilder
 {
+    public int Count => _indexToToolCallId.Count;
+
     private readonly Dictionary<int, string> _indexToToolCallId = [];
     private readonly Dictionary<int, string> _indexToFunctionName = [];
     private readonly Dictionary<int, SequenceBuilder<byte>> _indexToFunctionArguments = [];
@@ -38,6 +40,14 @@ public class StreamingChatToolCallsBuilder
             }
 
             argumentsBuilder.Append(toolCallUpdate.FunctionArgumentsUpdate);
+        }
+    }
+
+    public void AddRange(IEnumerable<StreamingChatToolCallUpdate> updates)
+    {
+        foreach (var update in updates)
+        {
+            Append(update);
         }
     }
 

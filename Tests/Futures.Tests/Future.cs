@@ -14,4 +14,30 @@ public class FutureTests
         Assert.False(future.Complete());
         Assert.False(future.Resolve());
     }
+
+    [Fact]
+    public async Task Should_Async_Enumerate()
+    {
+        var future = new Future<int>();
+        var task = Task.Run(async () =>
+        {
+            var i = -1;
+
+            await foreach (var update in future)
+            {
+                i++;
+                Assert.Equal(i, update);
+            }
+        });
+
+        await Task.Delay(100);
+
+        for (var i = 0; i < 10; i++)
+        {
+            future.Next(i);
+        }
+
+        future.Complete();
+        await task;
+    }
 }

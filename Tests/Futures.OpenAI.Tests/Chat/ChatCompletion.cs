@@ -44,10 +44,14 @@ public class ChatCompletionTests
     [Fact]
     public void Should_StoreMessages()
     {
-        var chat = Providers.From.Chat(_client.Object).Storage();
+        var messages = new List<OAI.ChatMessage>();
+        var chat = Providers.From
+            .Chat(_client.Object)
+            .Storage(messages)
+            .Pipe(completion => (OAI.ChatMessage.CreateAssistantMessage(completion), completion));
 
         chat.Next("hi");
-        var (messages, message, _) = chat.Complete();
+        var (message, completion) = chat.Complete();
         Assert.Equal(2, messages.Count());
         Assert.Equal("hi!", message.Content[0].Text);
     }
