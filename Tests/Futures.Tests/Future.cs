@@ -16,7 +16,33 @@ public class FutureTests
     }
 
     [Fact]
-    public async Task Should_Async_Enumerate()
+    public async Task Should_Enumerate()
+    {
+        var future = new Future<int>();
+        var task = Task.Run(() =>
+        {
+            var i = -1;
+
+            foreach (var update in future)
+            {
+                i++;
+                Assert.Equal(i, update);
+            }
+        });
+
+        await Task.Delay(100);
+
+        for (var i = 0; i < 10; i++)
+        {
+            future.Next(i);
+        }
+
+        future.Complete();
+        await task;
+    }
+
+    [Fact]
+    public async Task Should_Enumerate_Async()
     {
         var future = new Future<int>();
         var task = Task.Run(async () =>

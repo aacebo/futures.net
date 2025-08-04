@@ -1,6 +1,6 @@
 namespace Futures;
 
-public interface IFuture<TIn, TOut> : IDisposable, IAsyncDisposable, IAsyncEnumerable<TOut>
+public interface IFuture<TIn, TOut> : IDisposable, IEnumerable<TOut>, IAsyncDisposable, IAsyncEnumerable<TOut>
 {
     public Guid Id { get; }
     public State State { get; }

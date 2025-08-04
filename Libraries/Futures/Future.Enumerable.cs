@@ -1,55 +1,44 @@
+using System.Collections;
+
 namespace Futures;
 
 public partial class Future<TIn, TOut>
 {
-    public IAsyncEnumerator<TOut> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    public IEnumerator<TOut> GetEnumerator()
     {
         return new FutureEnumerator<TIn, TOut>(this);
     }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }
 
-internal class FutureEnumerator<TIn, TOut> : IAsyncEnumerator<TOut>
+internal partial class FutureEnumerator<TIn, TOut> : IEnumerator<TOut>
 {
-    public TOut Current => _values[_index];
+    object IEnumerator.Current => Current!;
 
-    private int _index = -1;
-    private bool _complete = false;
-    private readonly List<TOut> _values;
-    private readonly Subscription _subscription;
-
-    public FutureEnumerator(IFuture<TIn, TOut> future)
+    public void Dispose()
     {
-        _values = [];
-        _subscription = future.Subscribe(new()
-        {
-            OnNext = _values.Add,
-            OnComplete = () => _complete = true,
-            OnError = (_) => _complete = true,
-            OnCancel = () => _complete = true
-        });
+        _subscription.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    ~FutureEnumerator()
-    {
-        DisposeAsync();
-    }
-
-    public async ValueTask<bool> MoveNextAsync()
+    public bool MoveNext()
     {
         _index++;
 
         while (_index >= _values.Count && !_complete)
         {
-            await Task.Delay(100);
+            Task.Delay(100).Wait();
         }
 
         return _index < _values.Count;
     }
 
-    public ValueTask DisposeAsync()
+    public void Reset()
     {
-        _subscription.Dispose();
-        GC.SuppressFinalize(this);
-        return default;
+        throw new NotSupportedException();
     }
 }

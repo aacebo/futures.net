@@ -15,19 +15,21 @@ public static class ClientProviderExtensions
         }, cancellation);
     }
 
-    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), CollectionResult<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), IFuture<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
     {
-        return new Future<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), CollectionResult<OAI.StreamingChatCompletionUpdate>>(args =>
+        return new Future<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), IFuture<OAI.StreamingChatCompletionUpdate>>(args =>
         {
-            return client.CompleteChatStreaming(args.Item1, args.Item2 ?? options, cancellation);
+            var res = client.CompleteChatStreaming(args.Item1, args.Item2 ?? options, cancellation);
+            return Future<OAI.StreamingChatCompletionUpdate>.From(res);
         }, cancellation);
     }
 
-    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), AsyncCollectionResult<OAI.StreamingChatCompletionUpdate>> ChatStreamAsync(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static IFuture<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), IFuture<OAI.StreamingChatCompletionUpdate>> ChatStreamAsync(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
     {
-        return new Future<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), AsyncCollectionResult<OAI.StreamingChatCompletionUpdate>>(args =>
+        return new Future<(IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?), IFuture<OAI.StreamingChatCompletionUpdate>>(args =>
         {
-            return client.CompleteChatStreamingAsync(args.Item1, args.Item2 ?? options, cancellation);
+            var res = client.CompleteChatStreamingAsync(args.Item1, args.Item2 ?? options, cancellation);
+            return Future<OAI.StreamingChatCompletionUpdate>.From(res);
         }, cancellation);
     }
 }

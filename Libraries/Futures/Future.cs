@@ -32,6 +32,40 @@ public partial class Future<T> : Future<T, T>, IFuture<T>, IFuture<T, T>
         future.Error(ex);
         return future;
     }
+
+    public static Future<T> From(IEnumerable<T> enmerable, CancellationToken cancellation = default)
+    {
+        var future = new Future<T>(cancellation);
+
+        _ = Task.Run(() =>
+        {
+            foreach (var item in enmerable)
+            {
+                future.Next(item);
+            }
+
+            future.Complete();
+        }, future.Token);
+
+        return future;
+    }
+
+    public static Future<T> From(IAsyncEnumerable<T> enmerable, CancellationToken cancellation = default)
+    {
+        var future = new Future<T>(cancellation);
+
+        _ = Task.Run(async () =>
+        {
+            await foreach (var item in enmerable)
+            {
+                future.Next(item);
+            }
+
+            future.Complete();
+        }, future.Token);
+
+        return future;
+    }
 }
 
 public partial class Future<TIn, TOut> : IFuture<TIn, TOut>
