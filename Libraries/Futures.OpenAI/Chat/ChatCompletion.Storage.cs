@@ -46,6 +46,17 @@ public static partial class ChatCompletionExtensions
             }
 
             var stream = future.Next(messages, options);
+            var builder = new Streaming.CompletionBuilder();
+
+            stream.Subscribe(new()
+            {
+                OnNext = value => builder.Append(value),
+                OnComplete = () =>
+                {
+                    messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()));
+                }
+            });
+
             return stream;
         });
     }
