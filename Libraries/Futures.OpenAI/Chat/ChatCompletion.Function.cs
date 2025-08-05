@@ -1,15 +1,18 @@
+using System.Text.Json;
+
 using OAI = OpenAI.Chat;
 
 namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> Function<TOut, TParams>
+    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Function<TOut, TParams>
     (
-        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future,
+        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,
+        Func<TParams, string>? handler = null,
         bool strict = false
     )
     {
@@ -20,11 +23,66 @@ public static partial class ChatCompletionExtensions
             strict
         );
 
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut>((messages, opts) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion>((messages, opts) =>
         {
             var options = opts ?? new();
             options.Tools.Add(tool);
-            return future.Next(messages, options);
+            var completion = future.Next(messages, options);
+
+            if (handler is not null)
+            {
+                var message = OAI.ChatMessage.CreateAssistantMessage(completion);
+                var calls = message.ToolCalls.Where(call => call.FunctionName == name);
+
+                foreach (var call in calls)
+                {
+                    var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
+                    var res = handler(@params);
+                    messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
+                }
+            }
+
+            return completion;
+        });
+    }
+
+    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Function<TOut, TParams>
+    (
+        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        string name,
+        string? description = null,
+        BinaryData? parameters = null,
+        Func<TParams, string>? handler = null,
+        bool strict = false
+    )
+    {
+        var tool = OAI.ChatTool.CreateFunctionTool(
+            name,
+            description,
+            parameters,
+            strict
+        );
+
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>>((messages, opts) =>
+        {
+            var options = opts ?? new();
+            options.Tools.Add(tool);
+            var stream = future.Next(messages, options);
+
+            if (handler is not null)
+            {
+                var message = OAI.ChatMessage.CreateAssistantMessage(completion);
+                var calls = message.ToolCalls.Where(call => call.FunctionName == name);
+
+                foreach (var call in calls)
+                {
+                    var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
+                    var res = handler(@params);
+                    messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
+                }
+            }
+
+            return stream;
         });
     }
 }
