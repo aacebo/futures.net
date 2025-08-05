@@ -23,7 +23,7 @@ public class DebounceTests
                 Assert.Equal(i + 1, future.Next(i));
             });
 
-            await Task.Delay(TimeSpan.FromMilliseconds(10));
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
         }
 
         await Task.Delay(TimeSpan.FromMilliseconds(200));

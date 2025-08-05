@@ -4,6 +4,7 @@ namespace Futures.OpenAI.Chat.Streaming;
 
 public class CompletionBuilder
 {
+    public StreamingChatCompletionUpdate Last;
     public string? Id;
     public string? Model;
     public ChatMessageRole? Role;
@@ -16,8 +17,9 @@ public class CompletionBuilder
     public readonly List<ChatTokenLogProbabilityDetails> ContentTokenLogProbabilities = [];
     public readonly List<ChatTokenLogProbabilityDetails> RefusalTokenLogProbabilities = [];
 
-    public void Append(StreamingChatCompletionUpdate update)
+    public CompletionBuilder Append(StreamingChatCompletionUpdate update)
     {
+        Last = update;
         Id ??= update.CompletionId;
         Model ??= update.Model;
         Role ??= update.Role;
@@ -29,6 +31,7 @@ public class CompletionBuilder
         RefusalTokenLogProbabilities.AddRange(update.RefusalTokenLogProbabilities);
         Content.AddRange(update.ContentUpdate);
         ToolCalls.AddRange(update.ToolCallUpdates);
+        return this;
     }
 
     public void AddRange(IEnumerable<StreamingChatCompletionUpdate> updates)

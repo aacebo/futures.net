@@ -37,6 +37,8 @@ public interface IFuture<T1, T2, TOut> : IDisposable, IEnumerable<TOut>, IAsyncD
     public IFuture<T1, T2, TNext> Pipe<TNext>(Func<TOut, TNext> next);
     public IFuture<T1, T2, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);
     public IFuture<T1, T2, TNext> Pipe<TNext>(IFuture<TOut, TNext> next);
+
+    public ReadOnlyFuture<T1, T2, TOut> ToReadOnly();
 }
 
 /// <summary>
@@ -156,6 +158,11 @@ public partial class Future<T1, T2, TOut> : FutureBase<TOut>, IFuture<T1, T2, TO
         {
             return next.Next(Next(a, b));
         });
+    }
+
+    public ReadOnlyFuture<T1, T2, TOut> ToReadOnly()
+    {
+        return new ReadOnlyFuture<T1, T2, TOut>(this);
     }
 
     public static implicit operator ReadOnlyFuture<T1, T2, TOut>(Future<T1, T2, TOut> future) => new(future);

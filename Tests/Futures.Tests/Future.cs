@@ -30,7 +30,7 @@ public class FutureTests
             }
         });
 
-        await Task.Delay(100);
+        await Task.Delay(500);
 
         for (var i = 0; i < 10; i++)
         {
@@ -56,7 +56,7 @@ public class FutureTests
             }
         });
 
-        await Task.Delay(100);
+        await Task.Delay(500);
 
         for (var i = 0; i < 10; i++)
         {

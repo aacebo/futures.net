@@ -27,9 +27,9 @@ public interface IReadOnlyFuture<TIn, TOut> : IDisposable, IEnumerable<TOut>, IA
     public Subscription Subscribe(Subscriber<TOut> subscriber);
     public void UnSubscribe(Guid id);
 
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next);
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next);
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next);
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next);
 }
 
 /// <summary>
@@ -132,17 +132,17 @@ public partial class ReadOnlyFuture<TIn, TOut> : IReadOnlyFuture<TIn, TOut>
         _future.UnSubscribe(id);
     }
 
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next)
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next)
     {
         return new ReadOnlyFuture<TIn, TNext>(_future.Pipe(next));
     }
 
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next)
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next)
     {
         return new ReadOnlyFuture<TIn, TNext>(_future.Pipe(next));
     }
 
-    public IReadOnlyFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next)
+    public ReadOnlyFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next)
     {
         return new ReadOnlyFuture<TIn, TNext>(_future.Pipe(next));
     }

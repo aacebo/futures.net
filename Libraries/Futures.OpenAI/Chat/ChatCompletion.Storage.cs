@@ -30,15 +30,15 @@ public static partial class ChatCompletionExtensions
         });
     }
 
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Storage
+    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, ReadOnlyFuture<OAI.StreamingChatCompletionUpdate, OAI.StreamingChatCompletionUpdate>> Storage
     (
-        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, ReadOnlyFuture<OAI.StreamingChatCompletionUpdate, OAI.StreamingChatCompletionUpdate>> future,
         IList<OAI.ChatMessage>? messages = null
     )
     {
         messages ??= [];
 
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>>((input, options) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, ReadOnlyFuture<OAI.StreamingChatCompletionUpdate, OAI.StreamingChatCompletionUpdate>>((input, options) =>
         {
             foreach (var message in input)
             {
@@ -48,16 +48,24 @@ public static partial class ChatCompletionExtensions
             var stream = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            stream.Subscribe(new()
-            {
-                OnNext = value => builder.Append(value),
-                OnComplete = () =>
-                {
-                    messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()));
-                }
-            });
+            // stream.Subscribe(new()
+            // {
+            //     OnNext = value => builder.Append(value),
+            //     OnComplete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
+            // });
 
-            return stream;
+            return stream
+                .Pipe(update =>
+                {
+                    builder.Append(update);
+
+                    if (update.FinishReason is not null)
+                    {
+                        messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()));
+                    }
+
+                    return update;
+                });
         });
     }
 }

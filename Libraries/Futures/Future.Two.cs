@@ -36,6 +36,8 @@ public interface IFuture<TIn, TOut> : IDisposable, IEnumerable<TOut>, IAsyncDisp
     public IFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next);
     public IFuture<TIn, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);
     public IFuture<TIn, TNext> Pipe<TNext>(IFuture<TOut, TNext> next);
+
+    public ReadOnlyFuture<TIn, TOut> ToReadOnly();
 }
 
 /// <summary>
@@ -65,6 +67,16 @@ public partial class Future<TIn, TOut> : FutureBase<TOut>, IFuture<TIn, TOut>
     public Future(Func<TIn, IFuture<TIn, TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
     {
         Resolver = (input) => resolve(input).Resolve();
+    }
+
+    public Future(IFuture<TIn, TOut> future, CancellationToken cancellation = default) : base(cancellation)
+    {
+        Resolver = future.Next;
+    }
+
+    public Future(ReadOnlyFuture<TIn, TOut> future, CancellationToken cancellation = default) : base(cancellation)
+    {
+        Resolver = future.Next;
     }
 
     public Future(Action<TIn, Subscriber<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
@@ -154,6 +166,11 @@ public partial class Future<TIn, TOut> : FutureBase<TOut>, IFuture<TIn, TOut>
         {
             return next.Next(Next(value));
         });
+    }
+
+    public ReadOnlyFuture<TIn, TOut> ToReadOnly()
+    {
+        return new ReadOnlyFuture<TIn, TOut>(this);
     }
 
     public static implicit operator ReadOnlyFuture<TIn, TOut>(Future<TIn, TOut> future) => new(future);

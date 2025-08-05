@@ -14,7 +14,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <NoWarn>OPENAI001</NoWarn>
+    <NoWarn>CS8618;OPENAI001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

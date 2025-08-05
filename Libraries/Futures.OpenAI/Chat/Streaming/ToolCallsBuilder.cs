@@ -15,7 +15,7 @@ public class ToolCallsBuilder
     private readonly Dictionary<int, string> _indexToFunctionName = [];
     private readonly Dictionary<int, SequenceBuilder<byte>> _indexToFunctionArguments = [];
 
-    public void Append(StreamingChatToolCallUpdate toolCallUpdate)
+    public ToolCallsBuilder Append(StreamingChatToolCallUpdate toolCallUpdate)
     {
         // Keep track of which tool call ID belongs to this update index.
         if (toolCallUpdate.ToolCallId is not null)
@@ -41,14 +41,18 @@ public class ToolCallsBuilder
 
             argumentsBuilder.Append(toolCallUpdate.FunctionArgumentsUpdate);
         }
+
+        return this;
     }
 
-    public void AddRange(IEnumerable<StreamingChatToolCallUpdate> updates)
+    public ToolCallsBuilder AddRange(IEnumerable<StreamingChatToolCallUpdate> updates)
     {
         foreach (var update in updates)
         {
             Append(update);
         }
+
+        return this;
     }
 
     public IReadOnlyList<ChatToolCall> Build()
