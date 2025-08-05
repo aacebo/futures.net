@@ -158,6 +158,5 @@ public partial class Future<T1, T2, TOut> : FutureBase<TOut>, IFuture<T1, T2, TO
         });
     }
 
-    public static implicit operator ReadOnlyFuture<T1, T2, TOut>(Future<T1, T2, TOut> future) => new(future, future.Token);
-    public static implicit operator Future<(T1, T2), TOut>(Future<T1, T2, TOut> future) => new(args => future.Next(args.Item1, args.Item2), future.Token);
+    public static implicit operator ReadOnlyFuture<T1, T2, TOut>(Future<T1, T2, TOut> future) => new(future);
 }

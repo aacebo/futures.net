@@ -156,5 +156,5 @@ public partial class Future<TIn, TOut> : FutureBase<TOut>, IFuture<TIn, TOut>
         });
     }
 
-    public static implicit operator ReadOnlyFuture<TIn, TOut>(Future<TIn, TOut> future) => new(future, future.Token);
+    public static implicit operator ReadOnlyFuture<TIn, TOut>(Future<TIn, TOut> future) => new(future);
 }

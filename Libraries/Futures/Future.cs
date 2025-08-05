@@ -75,5 +75,5 @@ public partial class Future<T> : Future<T, T>, IFuture<T>, IFuture<T, T>
         return future;
     }
 
-    public static implicit operator ReadOnlyFuture<T, T>(Future<T> future) => new(future, future.Token);
+    public static implicit operator ReadOnlyFuture<T, T>(Future<T> future) => new(future);
 }
