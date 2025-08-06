@@ -1,5 +1,10 @@
 namespace Futures;
 
+public interface ISubscribable<T>
+{
+    public Subscription Subscribe(Subscriber<T> subscriber);
+}
+
 public class Subscription(Action unsubscribe) : IDisposable
 {
     ~Subscription()

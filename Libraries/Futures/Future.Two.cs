@@ -144,6 +144,17 @@ public partial class Future<TIn, TOut> : FutureBase<TOut>, IFuture<TIn, TOut>
         return Task.FromResult(Next(value));
     }
 
+    public virtual Subscription Subscribe<TNext>(IFuture<TOut, TNext> next)
+    {
+        return Subscribe(new()
+        {
+            OnNext = output => next.Next(output),
+            OnComplete = () => next.Complete(),
+            OnCancel = next.Cancel,
+            OnError = next.Error
+        });
+    }
+
     public IFuture<TIn, TNext> Pipe<TNext>(Func<TOut, TNext> next)
     {
         return new Future<TIn, TNext>(value =>
