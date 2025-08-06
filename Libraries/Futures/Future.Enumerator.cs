@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace Futures;
 
-internal partial class FutureEnumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
+internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 {
     public T Current => _values[_index];
     object IEnumerator.Current => Current!;
@@ -12,7 +12,7 @@ internal partial class FutureEnumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
     protected List<T> _values;
     protected Subscription _subscription;
 
-    public FutureEnumerator(FutureBase<T> future)
+    public Enumerator(Future<T> future)
     {
         _values = [];
         _subscription = future.Subscribe(new()
@@ -24,7 +24,7 @@ internal partial class FutureEnumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
         });
     }
 
-    ~FutureEnumerator()
+    ~Enumerator()
     {
         Dispose();
         DisposeAsync();

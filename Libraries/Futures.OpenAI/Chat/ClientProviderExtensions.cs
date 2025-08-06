@@ -4,7 +4,7 @@ namespace Futures.OpenAI.Chat;
 
 public static class ClientProviderExtensions
 {
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
     {
         return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion>((messages, opts) =>
         {
@@ -13,12 +13,12 @@ public static class ClientProviderExtensions
         }, cancellation);
     }
 
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, ReadOnlyFuture<OAI.StreamingChatCompletionUpdate, OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
     {
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, ReadOnlyFuture<OAI.StreamingChatCompletionUpdate, OAI.StreamingChatCompletionUpdate>>((messages, opts) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, opts) =>
         {
             var res = client.CompleteChatStreaming(messages, opts ?? options, cancellation);
-            return Future<OAI.StreamingChatCompletionUpdate>.From(res).ToReadOnly();
+            return Future<OAI.StreamingChatCompletionUpdate>.From(res);
         }, cancellation);
     }
 }

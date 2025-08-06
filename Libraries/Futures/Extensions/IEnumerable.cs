@@ -2,27 +2,24 @@ namespace Futures.Extensions;
 
 public static partial class IEnumerableExtensions
 {
-    public static IFuture<TIn, TOut> Pipe<TIn, TOut, TItem>(this TIn _, Func<TIn, TOut> next) where TIn : IEnumerable<TItem> where TOut : IEnumerable<TItem>
+    public static Future<TOut> Pipe<T, TOut, TItem>(this T value, Func<T, TOut> next) where T : IEnumerable<TItem> where TOut : IEnumerable<TItem>
     {
-        return new Future<TIn, TOut>(value =>
-        {
-            return next(value);
-        });
+        var future = new Future<T, TOut>(next);
+        future.Next(value);
+        return future;
     }
 
-    public static IFuture<IEnumerable<TItem>, IEnumerable<TItem>> Pipe<TItem>(this IList<TItem> _, Func<IEnumerable<TItem>, IEnumerable<TItem>> next)
+    public static Future<IEnumerable<TItem>> Pipe<TItem>(this IList<TItem> value, Func<IList<TItem>, IEnumerable<TItem>> next)
     {
-        return new Future<IEnumerable<TItem>, IEnumerable<TItem>>(value =>
-        {
-            return next(value);
-        });
+        var future = new Future<IList<TItem>, IEnumerable<TItem>>(next);
+        future.Next(value);
+        return future;
     }
 
-    public static IFuture<IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>> Pipe<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> _, Func<IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>> next)
+    public static Future<IEnumerable<KeyValuePair<TKey, TValue>>> Pipe<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> value, Func<IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>> next)
     {
-        return new Future<IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>>(value =>
-        {
-            return next(value);
-        });
+        var future = new Future<IEnumerable<KeyValuePair<TKey, TValue>>, IEnumerable<KeyValuePair<TKey, TValue>>>(next);
+        future.Next(value);
+        return future;
     }
 }

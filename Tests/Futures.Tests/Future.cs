@@ -5,7 +5,7 @@ public class FutureTests
     [Fact]
     public void Should_Pipe()
     {
-        var future = new Future<int>()
+        var future = new Future<int, int>(value => value)
             .Pipe(value => value.ToString())
             .Pipe(value => value == "1");
 
@@ -18,7 +18,7 @@ public class FutureTests
     [Fact]
     public async Task Should_Enumerate()
     {
-        var future = new Future<int>();
+        var future = new Future<int, int>(value => value);
         var task = Task.Run(() =>
         {
             var i = -1;
@@ -44,7 +44,7 @@ public class FutureTests
     [Fact]
     public async Task Should_Enumerate_Async()
     {
-        var future = new Future<int>();
+        var future = new Future<int, int>(value => value);
         var task = Task.Run(async () =>
         {
             var i = -1;
