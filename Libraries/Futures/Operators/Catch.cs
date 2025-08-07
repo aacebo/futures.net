@@ -14,7 +14,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task<T>> next)
@@ -29,7 +29,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T> Catch<T>(this Future<T> future, Action<Exception, T> next)
@@ -45,7 +45,7 @@ public static partial class FutureExtensions
                 next(ex, value);
                 return Task.FromResult(value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task> next)
@@ -61,7 +61,7 @@ public static partial class FutureExtensions
                 await next(ex, value);
                 return value;
             }
-        });
+        }, future.Token);
     }
 }
 
@@ -79,7 +79,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task<TOut>> next)
@@ -94,7 +94,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Action<Exception, T> next)
@@ -110,7 +110,7 @@ public static partial class FutureExtensions
                 next(ex, value);
                 return Task.FromResult(future.Value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task> next)
@@ -126,7 +126,7 @@ public static partial class FutureExtensions
                 await next(ex, value);
                 return future.Value;
             }
-        });
+        }, future.Token);
     }
 }
 
@@ -144,7 +144,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, a, b);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
@@ -159,7 +159,7 @@ public static partial class FutureExtensions
             {
                 return next(ex, a, b);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Action<Exception, T1, T2> next)
@@ -175,7 +175,7 @@ public static partial class FutureExtensions
                 next(ex, a, b);
                 return Task.FromResult(future.Value);
             }
-        });
+        }, future.Token);
     }
 
     public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
@@ -191,6 +191,6 @@ public static partial class FutureExtensions
                 await next(ex, a, b);
                 return future.Value;
             }
-        });
+        }, future.Token);
     }
 }

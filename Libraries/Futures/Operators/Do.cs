@@ -9,7 +9,7 @@ public static partial class FutureExtensions
             var output = future.Next(value);
             next(output);
             return output;
-        });
+        }, future.Token);
     }
 
     public static Future<T> Do<T>(this Future<T> future, Func<T, Task> next)
@@ -19,7 +19,7 @@ public static partial class FutureExtensions
             var output = future.Next(value);
             next(output).ConfigureAwait(false).GetAwaiter().GetResult();
             return output;
-        });
+        }, future.Token);
     }
 }
 
@@ -32,7 +32,7 @@ public static partial class FutureExtensions
             var output = future.Next(value);
             next(output);
             return output;
-        });
+        }, future.Token);
     }
 
     public static Future<T, TOut> Do<T, TOut>(this Future<T, TOut> future, Func<TOut, Task> next)
@@ -42,7 +42,7 @@ public static partial class FutureExtensions
             var output = future.Next(value);
             next(output).ConfigureAwait(false).GetAwaiter().GetResult();
             return output;
-        });
+        }, future.Token);
     }
 }
 
@@ -55,7 +55,7 @@ public static partial class FutureExtensions
             var output = future.Next(a, b);
             next(output);
             return output;
-        });
+        }, future.Token);
     }
 
     public static Future<T1, T2, TOut> Do<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<TOut, Task> next)
@@ -65,6 +65,6 @@ public static partial class FutureExtensions
             var output = future.Next(a, b);
             next(output).ConfigureAwait(false).GetAwaiter().GetResult();
             return output;
-        });
+        }, future.Token);
     }
 }

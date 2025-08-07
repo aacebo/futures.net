@@ -46,7 +46,7 @@ public static partial class FutureExtensions
             }
 
             producer.Complete();
-        });
+        }, future.Token);
     }
 }
 
@@ -96,7 +96,7 @@ public static partial class FutureExtensions
             }
 
             producer.Complete();
-        });
+        }, future.Token);
     }
 }
 
@@ -146,6 +146,6 @@ public static partial class FutureExtensions
             }
 
             producer.Complete();
-        });
+        }, future.Token);
     }
 }

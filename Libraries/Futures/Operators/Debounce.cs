@@ -21,7 +21,7 @@ public static partial class FutureExtensions
                 producer.Next(future.Next(value));
                 producer.Complete();
             });
-        });
+        }, future.Token);
     }
 
     public static Future<T> Debounce<T>(this Future<T> future, int ms = 200)
@@ -51,7 +51,7 @@ public static partial class FutureExtensions
                 producer.Next(future.Next(value));
                 producer.Complete();
             });
-        });
+        }, future.Token);
     }
 
     public static Future<T, TOut> Debounce<T, TOut>(this Future<T, TOut> future, int ms = 200)
@@ -81,7 +81,7 @@ public static partial class FutureExtensions
                 producer.Next(future.Next(a, b));
                 producer.Complete();
             });
-        });
+        }, future.Token);
     }
 
     public static Future<T1, T2, TOut> Debounce<T1, T2, TOut>(this Future<T1, T2, TOut> future, int ms = 200)

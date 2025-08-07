@@ -21,7 +21,7 @@ public static partial class FutureExtensions
             }
 
             throw last ?? new Exception("max retry attempts reached");
-        });
+        }, future.Token);
     }
 }
 
@@ -46,7 +46,7 @@ public static partial class FutureExtensions
             }
 
             throw last ?? new Exception("max retry attempts reached");
-        });
+        }, future.Token);
     }
 }
 
@@ -71,6 +71,6 @@ public static partial class FutureExtensions
             }
 
             throw last ?? new Exception("max retry attempts reached");
-        });
+        }, future.Token);
     }
 }

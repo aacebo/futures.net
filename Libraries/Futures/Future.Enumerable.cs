@@ -2,6 +2,24 @@ using System.Collections;
 
 namespace Futures;
 
+public partial class Future<T> : IEnumerable<T>, IAsyncEnumerable<T>
+{
+    public IEnumerator<T> GetEnumerator()
+    {
+        return new Enumerator<T>(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        return new Enumerator<T>(this);
+    }
+}
+
 internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 {
     public T Current => _values[_index];

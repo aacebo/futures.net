@@ -1,8 +1,6 @@
-using System.Collections;
-
 namespace Futures;
 
-public class Future<T> : IDisposable, IEnumerable<T>, IAsyncDisposable, IAsyncEnumerable<T>, ISubscribable<T>
+public partial class Future<T> : ISubscribable<T>
 {
     public Guid Id { get; } = Guid.NewGuid();
     public State State { get; protected set; } = State.NotStarted;
@@ -82,28 +80,6 @@ public class Future<T> : IDisposable, IEnumerable<T>, IAsyncDisposable, IAsyncEn
     ~Future()
     {
         Dispose();
-    }
-
-    public void Dispose()
-    {
-        foreach (var (_, consumer) in _consumers)
-        {
-            consumer.Dispose();
-        }
-
-        if (!IsComplete)
-        {
-            Cancel();
-        }
-
-        _source.Task.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return default;
     }
 
     internal T Next(T value)
@@ -203,6 +179,11 @@ public class Future<T> : IDisposable, IEnumerable<T>, IAsyncDisposable, IAsyncEn
         return _source.Task;
     }
 
+    public ValueTask<T> AsValueTask()
+    {
+        return new ValueTask<T>(_source.Task);
+    }
+
     public Subscription Subscribe(Consumer<T> consumer)
     {
         var id = Guid.NewGuid();
@@ -224,39 +205,43 @@ public class Future<T> : IDisposable, IEnumerable<T>, IAsyncDisposable, IAsyncEn
         _consumers.RemoveAt(i);
     }
 
-    public Future<TNext> Pipe<TNext>(Func<T, TNext> next)
+    public Future<T, TNext> Pipe<TNext>(Func<T, TNext> next)
     {
-        return new Future<T, TNext>(value => next(Next(value)));
+        return new Future<T, TNext>(value => next(Next(value)), Token);
     }
 
-    public Future<TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
+    public Future<T, TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
     {
-        return Pipe(value => next(value).ConfigureAwait(false).GetAwaiter().GetResult());
+        return new Future<T, TNext>(value =>
+        {
+            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult();
+        }, Token);
     }
 
-    public Future<TNext> Pipe<TNext>(Func<T, Future<TNext>> next)
+    public Future<T, TNext> Pipe<TNext>(Func<T, Future<TNext>> next)
     {
-        return Pipe(value => next(value).Resolve());
+        return new Future<T, TNext>(value => next(Next(value)).Resolve(), Token);
     }
 
-    public Future<TNext> Pipe<TNext>(Func<T, Task<Future<TNext>>> next)
+    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Future<TNext, TNextOut>> next)
     {
-        return Pipe(value => next(value).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
+        return new Future<T, TNextOut>(value => next(Next(value)).Resolve(), Token);
     }
 
-    public IEnumerator<T> GetEnumerator()
+    public Future<T, TNext> Pipe<TNext>(Func<T, Task<Future<TNext>>> next)
     {
-        return new Enumerator<T>(this);
+        return new Future<T, TNext>(value =>
+        {
+            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
+        }, Token);
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
+    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Task<Future<TNext, TNextOut>>> next)
     {
-        return GetEnumerator();
-    }
-
-    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-    {
-        return new Enumerator<T>(this);
+        return new Future<T, TNextOut>(value =>
+        {
+            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
+        }, Token);
     }
 
     public static Future<T> From(T value)
