@@ -211,6 +211,11 @@ public partial class Future<T> : ISubscribable<T>
         _consumers.RemoveAt(i);
     }
 
+    public Future<T, T> ToProducer()
+    {
+        return new Future<T, T>(Next);
+    }
+
     public Future<T, TNext> Pipe<TNext>(Func<T, TNext> next)
     {
         return new Future<T, TNext>(value => next(Next(value)), Token);
