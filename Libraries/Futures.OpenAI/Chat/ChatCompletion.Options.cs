@@ -10,9 +10,9 @@ public static partial class ChatCompletionExtensions
         OAI.ChatCompletionOptions options
     )
     {
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut>((messages, opts) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut>((messages, o) =>
         {
-            return future.Next(messages, opts ?? options);
-        });
+            return future.Next(messages, o ?? options);
+        }, future.Token);
     }
 }

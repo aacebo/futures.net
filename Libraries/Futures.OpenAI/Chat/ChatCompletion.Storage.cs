@@ -1,7 +1,3 @@
-using System.ClientModel;
-
-using Futures.Operators;
-
 using OAI = OpenAI.Chat;
 
 namespace Futures.OpenAI.Chat;
@@ -27,7 +23,7 @@ public static partial class ChatCompletionExtensions
             var assistantMessage = OAI.ChatMessage.CreateAssistantMessage(completion);
             messages.Add(assistantMessage);
             return completion;
-        });
+        }, future.Token);
     }
 
     public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> Storage
@@ -55,6 +51,6 @@ public static partial class ChatCompletionExtensions
             });
 
             return stream;
-        });
+        }, future.Token);
     }
 }

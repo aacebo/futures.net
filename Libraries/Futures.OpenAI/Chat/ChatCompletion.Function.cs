@@ -54,6 +54,6 @@ public static partial class ChatCompletionExtensions
             }
 
             return completion;
-        });
+        }, future.Token);
     }
 }

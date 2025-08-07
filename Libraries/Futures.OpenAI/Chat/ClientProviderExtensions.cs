@@ -4,20 +4,19 @@ namespace Futures.OpenAI.Chat;
 
 public static class ClientProviderExtensions
 {
-    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
     {
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion>((messages, opts) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion>((messages, options) =>
         {
-            var res = client.CompleteChat(messages, opts ?? options, cancellation);
-            return res.Value;
+            return client.CompleteChat(messages, options, cancellation).Value;
         }, cancellation);
     }
 
-    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
     {
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, opts) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, options) =>
         {
-            var res = client.CompleteChatStreaming(messages, opts ?? options, cancellation);
+            var res = client.CompleteChatStreaming(messages, options, cancellation);
             return Future<OAI.StreamingChatCompletionUpdate>.From(res);
         }, cancellation);
     }

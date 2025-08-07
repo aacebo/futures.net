@@ -84,7 +84,10 @@ public partial class Future<T> : ISubscribable<T>
 
     internal T Next(T value)
     {
-        if (IsComplete) return Value;
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
 
         State = State.Started;
         value = _resolver(value);
@@ -112,7 +115,7 @@ public partial class Future<T> : ISubscribable<T>
 
         if (IsComplete)
         {
-            return Value;
+            throw new InvalidOperationException("future is already complete");
         }
 
         State = State.Success;
@@ -133,7 +136,10 @@ public partial class Future<T> : ISubscribable<T>
 
     internal void Error(Exception ex)
     {
-        if (IsComplete) return;
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
 
         State = State.Error;
         _source.TrySetException(ex);

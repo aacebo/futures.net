@@ -107,9 +107,22 @@ public class Future<T, TOut> : Future<TOut>
         return new Future<T, TNext>(value => next(Next(value)).Resolve(), Token);
     }
 
+    public new Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Future<TNext, TNextOut>> next)
+    {
+        return new Future<T, TNextOut>(value => next(Next(value)).Resolve(), Token);
+    }
+
     public new Future<T, TNext> Pipe<TNext>(Func<TOut, Task<Future<TNext>>> next)
     {
         return new Future<T, TNext>(value =>
+        {
+            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
+        }, Token);
+    }
+
+    public new Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Task<Future<TNext, TNextOut>>> next)
+    {
+        return new Future<T, TNextOut>(value =>
         {
             return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
         }, Token);
