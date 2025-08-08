@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Futures;
 
 public partial class Future<T> : ISubscribable<T>
@@ -218,41 +220,32 @@ public partial class Future<T> : ISubscribable<T>
 
     public Future<T, TNext> Pipe<TNext>(Func<T, TNext> next)
     {
-        return new Future<T, TNext>(value => next(Next(value)), Token);
+        return new Future<T, TNext>(v => next(Next(v)), Token);
     }
 
     public Future<T, TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
     {
-        return new Future<T, TNext>(value =>
-        {
-            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult();
-        }, Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult());
     }
 
     public Future<T, TNext> Pipe<TNext>(Func<T, Future<TNext>> next)
     {
-        return new Future<T, TNext>(value => next(Next(value)).Resolve(), Token);
+        return Pipe(v => next(v).Resolve());
     }
 
     public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Future<TNext, TNextOut>> next)
     {
-        return new Future<T, TNextOut>(value => next(Next(value)).Resolve(), Token);
+        return Pipe(v => next(v).Resolve());
     }
 
     public Future<T, TNext> Pipe<TNext>(Func<T, Task<Future<TNext>>> next)
     {
-        return new Future<T, TNext>(value =>
-        {
-            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-        }, Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 
     public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Task<Future<TNext, TNextOut>>> next)
     {
-        return new Future<T, TNextOut>(value =>
-        {
-            return next(Next(value)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-        }, Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 
     public static Future<T> From(T value)

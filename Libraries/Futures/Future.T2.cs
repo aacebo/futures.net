@@ -96,32 +96,26 @@ public class Future<T1, T2, TOut> : Future<TOut>
 
     public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next)
     {
-        return new Future<T1, T2, TNext>((a, b) => next(Next(a, b)).ConfigureAwait(false).GetAwaiter().GetResult(), Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult());
     }
 
     public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Future<TNext>> next)
     {
-        return new Future<T1, T2, TNext>((a, b) => next(Next(a, b)).Resolve(), Token);
+        return Pipe(v => next(v).Resolve());
     }
 
     public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Future<TNext, TNextOut>> next)
     {
-        return new Future<T1, T2, TNextOut>((a, b) => next(Next(a, b)).Resolve(), Token);
+        return Pipe(v => next(v).Resolve());
     }
 
     public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Task<Future<TNext>>> next)
     {
-        return new Future<T1, T2, TNext>((a, b) =>
-        {
-            return next(Next(a, b)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-        }, Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 
     public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Task<Future<TNext, TNextOut>>> next)
     {
-        return new Future<T1, T2, TNextOut>((a, b) =>
-        {
-            return next(Next(a, b)).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-        }, Token);
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 }
