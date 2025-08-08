@@ -36,7 +36,7 @@ public static partial class ChatCompletionExtensions
                 var message = OAI.ChatMessage.CreateAssistantMessage(completion);
                 var calls = message.ToolCalls.Where(call => call.FunctionName == name);
 
-                while (calls.Count() > 0)
+                while (calls.Any())
                 {
                     messages = messages.Append(message);
 
