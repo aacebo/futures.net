@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace Futures;
 
 public partial class Future<T> : ISubscribable<T>
