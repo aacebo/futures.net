@@ -5,7 +5,7 @@ using OpenAI;
 
 using Samples.Functions;
 
-List<OpenAI.Chat.ChatMessage> messages = [];
+var messages = new List<OpenAI.Chat.ChatMessage>();
 var client = new OpenAIClient(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 var future = Providers.From
     .Chat(client.GetChatClient("gpt-3.5-turbo"))
@@ -23,7 +23,7 @@ var future = Providers.From
     )
     .Storage(messages)
     .Pipe(completion => OpenAI.Chat.ChatMessage.CreateAssistantMessage(completion))
-    .Pipe(message => string.Join("", message.Content.Where(c => c.Text != string.Empty).Select(c => c.Text)));
+    .Pipe(message => string.Join(string.Empty, message.Content.Where(c => c.Text != string.Empty).Select(c => c.Text)));
 
 Console.WriteLine(future.Send("hi, please increment the value 203"));
 Console.WriteLine(future.Send("hi, please increment the value 500"));

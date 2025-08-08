@@ -2,7 +2,7 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static Future<T> Into<T, TNext>(this Future<T> future, Future<T> next)
+    public static Future<T> Into<T>(this Future<T> future, Future<T> next)
     {
         return future.Pipe(value =>
         {

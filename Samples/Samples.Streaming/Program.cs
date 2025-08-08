@@ -3,7 +3,7 @@ using Futures.OpenAI.Chat;
 
 using OpenAI;
 
-List<OpenAI.Chat.ChatMessage> messages = [];
+var messages = new List<OpenAI.Chat.ChatMessage>();
 var client = new OpenAIClient(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 var future = Providers.From
     .ChatStream(client.GetChatClient("gpt-3.5-turbo"))

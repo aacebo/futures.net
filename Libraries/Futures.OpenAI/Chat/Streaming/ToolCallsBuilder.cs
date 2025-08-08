@@ -10,6 +10,7 @@ namespace Futures.OpenAI.Chat.Streaming;
 public class ToolCallsBuilder
 {
     public int Count => _indexToToolCallId.Count;
+    public bool Any => _indexToToolCallId.Any();
 
     private readonly Dictionary<int, string> _indexToToolCallId = [];
     private readonly Dictionary<int, string> _indexToFunctionName = [];
