@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Streaming", "Sample
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Functions", "Samples\Samples.Functions\Samples.Functions.csproj", "{64B3492A-9A21-477B-9ACD-0B9EEA453B9D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.StreamingFunctions", "Samples\Samples.StreamingFunctions\Samples.StreamingFunctions.csproj", "{001995F4-29A4-4830-B32B-95D20FE4A38F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -103,6 +105,18 @@ Global
 		{64B3492A-9A21-477B-9ACD-0B9EEA453B9D}.Release|x64.Build.0 = Release|Any CPU
 		{64B3492A-9A21-477B-9ACD-0B9EEA453B9D}.Release|x86.ActiveCfg = Release|Any CPU
 		{64B3492A-9A21-477B-9ACD-0B9EEA453B9D}.Release|x86.Build.0 = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|x64.Build.0 = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Debug|x86.Build.0 = Debug|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|x64.ActiveCfg = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|x64.Build.0 = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|x86.ActiveCfg = Release|Any CPU
+		{001995F4-29A4-4830-B32B-95D20FE4A38F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -114,5 +128,6 @@ Global
 		{8C8C1779-E6EE-4B1B-82FB-7E753A3E5AFF} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{A362897C-A2E8-4213-9251-57056A004098} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 		{64B3492A-9A21-477B-9ACD-0B9EEA453B9D} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{001995F4-29A4-4830-B32B-95D20FE4A38F} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal

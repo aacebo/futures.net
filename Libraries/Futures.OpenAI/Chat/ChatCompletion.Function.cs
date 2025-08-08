@@ -1,5 +1,6 @@
 using System.Text.Json;
 
+using Futures.Extensions;
 using Futures.Operators;
 
 using OAI = OpenAI.Chat;
@@ -84,26 +85,37 @@ public static partial class ChatCompletionExtensions
 
             return updates.Pipe(update =>
             {
+                var next = Future<OAI.StreamingChatCompletionUpdate>.From(update);
                 builder.Append(update);
 
-                if (handler is not null && update.FinishReason == OAI.ChatFinishReason.ToolCalls)
+                if (handler is null || !update.ToolCallUpdates.Any())
                 {
-                    var calls = builder.ToolCalls.Build();
-                    var message = OAI.ChatMessage.CreateAssistantMessage(calls);
-
-                    messages = messages.Append(message);
-
-                    foreach (var call in calls)
-                    {
-                        var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
-                        var res = handler(@params);
-                        messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
-                    }
-
-                    return future.Next(messages, options);
+                    return next;
                 }
 
-                return Future<OAI.StreamingChatCompletionUpdate>.From(update);
+                return next.Pipe(toolCallUpdate =>
+                {
+                    if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
+                    {
+                        var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
+
+                        while (message.ToolCalls.Any())
+                        {
+                            messages = messages.Append(message);
+
+                            foreach (var call in message.ToolCalls)
+                            {
+                                var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
+                                var res = handler(@params);
+                                messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
+                            }
+
+                            var updates = future.Next(messages, options);
+                        }
+                    }
+
+                    return toolCallUpdate;
+                });
             });
         }, future.Token);
     }

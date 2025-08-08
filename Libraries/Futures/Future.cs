@@ -228,7 +228,7 @@ public partial class Future<T> : ISubscribable<T>
 
     public Future<T> Pipe(Future<T> next)
     {
-        return Pipe(v => next.Next(v));
+        return Pipe(next.Next);
     }
 
     public Future<T, TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
@@ -256,6 +256,26 @@ public partial class Future<T> : ISubscribable<T>
         return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 
+    public Future<T, TNext> Pipe<TNext>(Action<T, Producer<TNext>> next)
+    {
+        return Pipe(v =>
+        {
+            var future = new Future<TNext>(Token);
+            next(v, new(future));
+            return future.Resolve();
+        });
+    }
+
+    public Future<T, TNext> Pipe<TNext>(Func<T, Producer<TNext>, Task> next)
+    {
+        return Pipe(v =>
+        {
+            var future = new Future<TNext>(Token);
+            next(v, new(future));
+            return future.Resolve();
+        });
+    }
+
     public static Future<T> From(T value)
     {
         var future = new Future<T>();
@@ -271,37 +291,38 @@ public partial class Future<T> : ISubscribable<T>
         return future;
     }
 
-    public static Future<T> From(IEnumerable<T> enmerable, CancellationToken cancellation = default)
+    public static Future<IEnumerable<T>, T> From(IEnumerable<T> enumerable, CancellationToken cancellation = default)
     {
-        var future = new Future<T>(cancellation);
-
-        _ = Task.Run(() =>
+        var future = new Future<IEnumerable<T>, T>((value, producer) =>
         {
-            foreach (var item in enmerable)
+            foreach (var item in value)
             {
-                future.Next(item);
+                producer.Next(item);
             }
 
-            future.Complete();
-        }, future.Token);
+            producer.Complete();
+            return Task.CompletedTask;
+        }, cancellation);
 
+        future.Next(enumerable);
+        future.Complete();
         return future;
     }
 
-    public static Future<T> From(IAsyncEnumerable<T> enmerable, CancellationToken cancellation = default)
+    public static Future<IAsyncEnumerable<T>, T> From(IAsyncEnumerable<T> enumerable, CancellationToken cancellation = default)
     {
-        var future = new Future<T>(cancellation);
-
-        _ = Task.Run(async () =>
-        {
-            await foreach (var item in enmerable)
+        var future = new Future<IAsyncEnumerable<T>>(cancellation)
+            .Pipe(async (IAsyncEnumerable<T> value, Producer<T> producer) =>
             {
-                future.Next(item);
-            }
+                await foreach (var item in value)
+                {
+                    producer.Next(item);
+                }
 
-            future.Complete();
-        }, future.Token);
+                producer.Complete();
+            });
 
+        future.Next(enumerable);
         return future;
     }
 }
