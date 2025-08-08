@@ -25,6 +25,6 @@ var future = Providers.From
     .Pipe(completion => OpenAI.Chat.ChatMessage.CreateAssistantMessage(completion))
     .Pipe(message => string.Join("", message.Content.Where(c => c.Text != string.Empty).Select(c => c.Text)));
 
-Console.WriteLine(future.Next("hi, please increment the value 203"));
-Console.WriteLine(future.Next("hi, please increment the value 500"));
+Console.WriteLine(future.Send("hi, please increment the value 203"));
+Console.WriteLine(future.Send("hi, please increment the value 500"));
 Console.WriteLine($"done! {messages.Count}");
