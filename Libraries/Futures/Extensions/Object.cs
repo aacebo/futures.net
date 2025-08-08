@@ -2,16 +2,17 @@ namespace Futures.Extensions;
 
 public static partial class ObjectExtensions
 {
-    public static IFuture<T, T> Pipe<T>(this T _)
+    public static Future<T, T> Pipe<T>(this T value)
     {
-        return new Future<T, T>(value => value);
+        var future = new Future<T, T>(value => value);
+        future.Next(value);
+        return future;
     }
 
-    public static IFuture<TIn, TOut> Pipe<TIn, TOut>(this TIn _, Func<TIn, TOut> next)
+    public static Future<T, TOut> Pipe<T, TOut>(this T value, Func<T, TOut> next)
     {
-        return new Future<TIn, TOut>(value =>
-        {
-            return next(value);
-        });
+        var future = new Future<T, TOut>(next);
+        future.Next(value);
+        return future;
     }
 }

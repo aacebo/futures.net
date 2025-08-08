@@ -2,11 +2,27 @@ namespace Futures;
 
 public interface ISubscribable<T>
 {
-    public Subscription Subscribe(Subscriber<T> subscriber);
+    public Subscription Subscribe(Consumer<T> consumer);
 }
 
-public class Subscription(Action unsubscribe) : IDisposable
+public class Subscription : IConsumer
 {
+    public bool IsOpen { get; private set; }
+
+    protected readonly Action _unsubscribe;
+
+    internal Subscription()
+    {
+        _unsubscribe = () => { };
+        IsOpen = true;
+    }
+
+    internal Subscription(Action unsubscribe)
+    {
+        _unsubscribe = unsubscribe;
+        IsOpen = true;
+    }
+
     ~Subscription()
     {
         Dispose();
@@ -14,65 +30,15 @@ public class Subscription(Action unsubscribe) : IDisposable
 
     public void Dispose()
     {
-        unsubscribe();
-        GC.SuppressFinalize(this);
-    }
-}
-
-public class Subscriber<T> : IDisposable
-{
-    public Action<T>? OnNext { get; set; }
-    public Action? OnComplete { get; set; }
-    public Action<Exception>? OnError { get; set; }
-    public Action? OnCancel { get; set; }
-
-    ~Subscriber()
-    {
-        Dispose();
-    }
-
-    public void Dispose()
-    {
+        UnSubscribe();
         GC.SuppressFinalize(this);
     }
 
-    public void Next(T value)
+    public void UnSubscribe()
     {
-        if (OnNext is null)
-        {
-            return;
-        }
+        if (!IsOpen) return;
 
-        OnNext(value);
-    }
-
-    public void Complete()
-    {
-        if (OnComplete is null)
-        {
-            return;
-        }
-
-        OnComplete();
-    }
-
-    public void Error(Exception error)
-    {
-        if (OnError is null)
-        {
-            return;
-        }
-
-        OnError(error);
-    }
-
-    public void Cancel()
-    {
-        if (OnCancel is null)
-        {
-            return;
-        }
-
-        OnCancel();
+        _unsubscribe();
+        IsOpen = false;
     }
 }

@@ -7,7 +7,7 @@ public class DebounceTests
     [Fact]
     public async Task Should_Debounce()
     {
-        var future = new Future<int>()
+        var future = new Future<int>(value => value)
             .Pipe(value => value + 1)
             .Debounce(200);
 

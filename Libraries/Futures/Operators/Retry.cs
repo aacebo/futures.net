@@ -1,10 +1,10 @@
 namespace Futures.Operators;
 
-public static partial class OperatorExtensions
+public static partial class FutureExtensions
 {
-    public static IFuture<TIn, TOut> Retry<TIn, TOut>(this IFuture<TIn, TOut> future, int attempts = 3)
+    public static Future<T> Retry<T>(this Future<T> future, int attempts = 3)
     {
-        return new Future<TIn, TOut>(value =>
+        return new Future<T>(value =>
         {
             Exception? last = null;
 
@@ -21,10 +21,38 @@ public static partial class OperatorExtensions
             }
 
             throw last ?? new Exception("max retry attempts reached");
-        });
+        }, future.Token);
     }
+}
 
-    public static IFuture<T1, T2, TOut> Retry<T1, T2, TOut>(this IFuture<T1, T2, TOut> future, int attempts = 3)
+public static partial class FutureExtensions
+{
+    public static Future<T, TOut> Retry<T, TOut>(this Future<T, TOut> future, int attempts = 3)
+    {
+        return new Future<T, TOut>(value =>
+        {
+            Exception? last = null;
+
+            for (var i = 0; i < attempts; i++)
+            {
+                try
+                {
+                    return future.Next(value);
+                }
+                catch (Exception ex)
+                {
+                    last = ex;
+                }
+            }
+
+            throw last ?? new Exception("max retry attempts reached");
+        }, future.Token);
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static Future<T1, T2, TOut> Retry<T1, T2, TOut>(this Future<T1, T2, TOut> future, int attempts = 3)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -43,6 +71,6 @@ public static partial class OperatorExtensions
             }
 
             throw last ?? new Exception("max retry attempts reached");
-        });
+        }, future.Token);
     }
 }

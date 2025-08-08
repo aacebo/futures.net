@@ -34,10 +34,11 @@ public class ChatCompletionTests
     [Fact]
     public void Should_CreateFuture()
     {
-        var completion = Providers.From.Chat(_client.Object)
+        var completion = Providers.From
+            .Chat(_client.Object)
             .Pipe(res => res.Content.FirstOrDefault()?.Text);
 
-        Assert.Equal("hi!", completion.Next("hi"));
+        Assert.Equal("hi!", completion.Send("hi"));
         completion.Complete();
     }
 
@@ -50,8 +51,11 @@ public class ChatCompletionTests
             .Storage(messages)
             .Pipe(completion => (OAI.ChatMessage.CreateAssistantMessage(completion), completion));
 
-        chat.Next("hi");
-        var (message, completion) = chat.Complete();
+        var (message, completion) = chat.Send("hi");
+        Assert.Equal(2, messages.Count());
+        Assert.Equal("hi!", message.Content[0].Text);
+
+        (message, completion) = chat.Complete();
         Assert.Equal(2, messages.Count());
         Assert.Equal("hi!", message.Content[0].Text);
     }
