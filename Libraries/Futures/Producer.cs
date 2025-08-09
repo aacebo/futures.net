@@ -4,26 +4,7 @@ namespace Futures;
 /// publishes/writes data to some Future
 /// </summary>
 /// <typeparam name="T">the type of data published</typeparam>
-public interface IProducer<T> : IDisposable
-{
-    public void Next(T value);
-    public Task NextAsync(T value);
-
-    public void Complete();
-    public Task CompleteAsync();
-
-    public void Error(Exception error);
-    public Task ErrorAsync(Exception error);
-
-    public void Cancel();
-    public Task CancelAsync();
-}
-
-/// <summary>
-/// publishes/writes data to some Future
-/// </summary>
-/// <typeparam name="T">the type of data published</typeparam>
-public class Producer<T> : IProducer<T>
+public class Producer<T>
 {
     protected readonly Future<T> _destination;
 

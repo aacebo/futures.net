@@ -1,11 +1,6 @@
 namespace Futures;
 
-public interface ISubscribable<T>
-{
-    public Subscription Subscribe(Consumer<T> consumer);
-}
-
-public class Subscription : IConsumer
+public class Subscription
 {
     public bool IsOpen { get; private set; }
 

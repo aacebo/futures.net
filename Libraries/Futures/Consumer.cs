@@ -3,16 +3,8 @@ namespace Futures;
 /// <summary>
 /// consumes/reads data from some Future
 /// </summary>
-public interface IConsumer
-{
-    public void UnSubscribe();
-}
-
-/// <summary>
-/// consumes/reads data from some Future
-/// </summary>
 /// <typeparam name="T">the type of data consumed</typeparam>
-public class Consumer<T> : IConsumer
+public class Consumer<T>
 {
     public Action<T>? OnNext { get; set; }
     public Action? OnComplete { get; set; }
