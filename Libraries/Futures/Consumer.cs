@@ -41,41 +41,25 @@ public class Consumer<T>
 
     internal void Next(T value)
     {
-        if (OnNext is null)
-        {
-            return;
-        }
-
+        if (OnNext is null) return;
         OnNext(value);
     }
 
     internal void Complete()
     {
-        if (OnComplete is null)
-        {
-            return;
-        }
-
+        if (OnComplete is null) return;
         OnComplete();
     }
 
     internal void Error(Exception error)
     {
-        if (OnError is null)
-        {
-            return;
-        }
-
+        if (OnError is null) return;
         OnError(error);
     }
 
     internal void Cancel()
     {
-        if (OnCancel is null)
-        {
-            return;
-        }
-
+        if (OnCancel is null) return;
         OnCancel();
     }
 }

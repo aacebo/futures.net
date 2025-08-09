@@ -291,21 +291,20 @@ public partial class Future<T>
         return future;
     }
 
-    public static Future<IEnumerable<T>, T> From(IEnumerable<T> enumerable, CancellationToken cancellation = default)
+    public static Future<T> From(IEnumerable<T> enmerable, CancellationToken cancellation = default)
     {
-        var future = new Future<IEnumerable<T>, T>((value, producer) =>
+        var future = new Future<T>(cancellation);
+
+        _ = Task.Run(() =>
         {
-            foreach (var item in value)
+            foreach (var item in enmerable)
             {
-                producer.Next(item);
+                future.Next(item);
             }
 
-            producer.Complete();
-            return Task.CompletedTask;
-        }, cancellation);
+            future.Complete();
+        }, future.Token);
 
-        future.Next(enumerable);
-        future.Complete();
         return future;
     }
 
