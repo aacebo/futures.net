@@ -6,7 +6,7 @@ namespace Futures;
 /// <typeparam name="T">the type of data published</typeparam>
 public class Producer<T>
 {
-    protected readonly Future<T> _destination;
+    private readonly Future<T> _destination;
 
     internal Producer(Future<T> destination)
     {

@@ -14,16 +14,6 @@ public class Future<T1, T2, TOut> : Future<TOut>
         _resolver = (a, b) => resolver(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Future(Func<T1, T2, Future<TOut>> resolver, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolver = (a, b) => resolver(a, b).Resolve();
-    }
-
-    public Future(Func<T1, T2, Task<Future<TOut>>> resolver, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolver = (a, b) => resolver(a, b).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-    }
-
     public Future(Action<T1, T2, Producer<TOut>> resolver, CancellationToken cancellation = default) : base(cancellation)
     {
         _resolver = (a, b) =>
@@ -99,26 +89,6 @@ public class Future<T1, T2, TOut> : Future<TOut>
         return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult());
     }
 
-    public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Future<TNext>> next)
-    {
-        return Pipe(v => next(v).Resolve());
-    }
-
-    public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Future<TNext, TNextOut>> next)
-    {
-        return Pipe(v => next(v).Resolve());
-    }
-
-    public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Task<Future<TNext>>> next)
-    {
-        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
-    }
-
-    public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Task<Future<TNext, TNextOut>>> next)
-    {
-        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
-    }
-
     public new Future<T1, T2, TNext> Pipe<TNext>(Action<TOut, Producer<TNext>> next)
     {
         return Pipe(v =>
@@ -137,5 +107,25 @@ public class Future<T1, T2, TOut> : Future<TOut>
             next(v, new(future));
             return future.Resolve();
         });
+    }
+
+    public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Future<TNext>> next)
+    {
+        return Pipe(v => next(v).Resolve());
+    }
+
+    public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Future<TNext, TNextOut>> next)
+    {
+        return Pipe(v => next(v).Resolve());
+    }
+
+    public new Future<T1, T2, TNext> Pipe<TNext>(Func<TOut, Task<Future<TNext>>> next)
+    {
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
+    }
+
+    public new Future<T1, T2, TNextOut> Pipe<TNext, TNextOut>(Func<TOut, Task<Future<TNext, TNextOut>>> next)
+    {
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 }

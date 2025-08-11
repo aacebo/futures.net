@@ -17,7 +17,7 @@ public static class ClientProviderExtensions
         return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, options) =>
         {
             var res = client.CompleteChatStreaming(messages, options, cancellation);
-            return Future<OAI.StreamingChatCompletionUpdate>.From(res);
+            return res.ToFuture();
         }, cancellation);
     }
 }

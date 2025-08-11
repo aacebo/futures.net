@@ -39,20 +39,6 @@ public partial class Future<T>
         _resolver = value => resolver(value).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Future(Func<T, Future<T>> resolver, CancellationToken cancellation = default)
-    {
-        Token = cancellation;
-        _source = new(cancellation);
-        _resolver = value => resolver(value).Resolve();
-    }
-
-    public Future(Func<T, Task<Future<T>>> resolver, CancellationToken cancellation = default)
-    {
-        Token = cancellation;
-        _source = new(cancellation);
-        _resolver = value => resolver(value).ConfigureAwait(false).GetAwaiter().GetResult().Resolve();
-    }
-
     public Future(Action<T, Producer<T>> resolver, CancellationToken cancellation = default)
     {
         Token = cancellation;
@@ -60,7 +46,7 @@ public partial class Future<T>
         _resolver = value =>
         {
             var future = new Future<T>(Token);
-            resolver(value, new(future));
+            Task.Run(() => resolver(value, new(future)), Token);
             return future.Resolve();
         };
     }
@@ -72,7 +58,7 @@ public partial class Future<T>
         _resolver = value =>
         {
             var future = new Future<T>(Token);
-            resolver(value, new(future)).ConfigureAwait(false).GetAwaiter().GetResult();
+            resolver(value, new(future));
             return future.Resolve();
         };
     }
@@ -226,34 +212,9 @@ public partial class Future<T>
         return new Future<T, TNext>(v => next(Next(v)), Token);
     }
 
-    public Future<T> Pipe(Future<T> next)
-    {
-        return Pipe(next.Next);
-    }
-
     public Future<T, TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
     {
         return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult());
-    }
-
-    public Future<T, TNext> Pipe<TNext>(Func<T, Future<TNext>> next)
-    {
-        return Pipe(v => next(v).Resolve());
-    }
-
-    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Future<TNext, TNextOut>> next)
-    {
-        return Pipe(v => next(v).Resolve());
-    }
-
-    public Future<T, TNext> Pipe<TNext>(Func<T, Task<Future<TNext>>> next)
-    {
-        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
-    }
-
-    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Task<Future<TNext, TNextOut>>> next)
-    {
-        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
     }
 
     public Future<T, TNext> Pipe<TNext>(Action<T, Producer<TNext>> next)
@@ -276,6 +237,41 @@ public partial class Future<T>
         });
     }
 
+    public Future<T> Pipe(Func<T, Future<T>> next)
+    {
+        return Pipe(v =>
+        {
+            var value = v;
+
+            foreach (var output in next(value))
+            {
+                value = output;
+            }
+
+            return value;
+        });
+    }
+
+    public Future<T, TNext> Pipe<TNext>(Func<T, Future<TNext>> next)
+    {
+        return Pipe(v => next(v).Resolve());
+    }
+
+    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Future<TNext, TNextOut>> next)
+    {
+        return Pipe(v => next(v).Resolve());
+    }
+
+    public Future<T, TNext> Pipe<TNext>(Func<T, Task<Future<TNext>>> next)
+    {
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
+    }
+
+    public Future<T, TNextOut> Pipe<TNext, TNextOut>(Func<T, Task<Future<TNext, TNextOut>>> next)
+    {
+        return Pipe(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult().Resolve());
+    }
+
     public static Future<T> From(T value)
     {
         var future = new Future<T>();
@@ -288,40 +284,6 @@ public partial class Future<T>
     {
         var future = new Future<T>();
         future.Error(error);
-        return future;
-    }
-
-    public static Future<T> From(IEnumerable<T> enmerable, CancellationToken cancellation = default)
-    {
-        var future = new Future<T>(cancellation);
-
-        _ = Task.Run(() =>
-        {
-            foreach (var item in enmerable)
-            {
-                future.Next(item);
-            }
-
-            future.Complete();
-        }, future.Token);
-
-        return future;
-    }
-
-    public static Future<IAsyncEnumerable<T>, T> From(IAsyncEnumerable<T> enumerable, CancellationToken cancellation = default)
-    {
-        var future = new Future<IAsyncEnumerable<T>>(cancellation)
-            .Pipe(async (IAsyncEnumerable<T> value, Producer<T> producer) =>
-            {
-                await foreach (var item in value)
-                {
-                    producer.Next(item);
-                }
-
-                producer.Complete();
-            });
-
-        future.Next(enumerable);
         return future;
     }
 }

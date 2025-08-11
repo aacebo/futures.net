@@ -20,6 +20,41 @@ public partial class Future<T> : IEnumerable<T>, IAsyncEnumerable<T>
     }
 }
 
+public static class IEnumerableExtensions
+{
+    public static Future<T> ToFuture<T>(this IEnumerable<T> enumerable)
+    {
+        var future = new Future<IEnumerable<T>, T>((items, producer) =>
+        {
+            foreach (var value in items)
+            {
+                producer.Next(value);
+            }
+
+            producer.Complete();
+        });
+
+        future.NextAsync(enumerable);
+        return future;
+    }
+}
+
+public static class IAsyncEnumerableExtensions
+{
+    public static Future<T> ToFuture<T>(this IAsyncEnumerable<T> enumerable)
+    {
+        return new Future<T>(async (_, producer) =>
+        {
+            await foreach (var value in enumerable)
+            {
+                producer.Next(value);
+            }
+
+            producer.Complete();
+        });
+    }
+}
+
 internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 {
     public T Current => _values[_index];
