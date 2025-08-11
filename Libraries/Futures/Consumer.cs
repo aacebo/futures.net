@@ -4,24 +4,19 @@ namespace Futures;
 /// consumes/reads data from some Future
 /// </summary>
 /// <typeparam name="T">the type of data consumed</typeparam>
-public class Consumer<T>
+public class Consumer<T> : IConsumer<T>
 {
-    public Action<T>? OnNext { get; set; }
-    public Action? OnComplete { get; set; }
-    public Action<Exception>? OnError { get; set; }
-    public Action? OnCancel { get; set; }
+    public Action<T>? Next { get; set; }
+    public Func<T, Task>? NextAsync { get; set; }
 
-    internal Subscription Subscription;
+    public Action? Complete { get; set; }
+    public Func<Task>? CompleteAsync { get; set; }
 
-    public Consumer()
-    {
-        Subscription = new(() => { });
-    }
+    public Action<Exception>? Error { get; set; }
+    public Func<Exception, Task>? ErrorAsync { get; set; }
 
-    internal Consumer(Subscription subscription)
-    {
-        Subscription = subscription;
-    }
+    public Action? Cancel { get; set; }
+    public Func<Task>? CancelAsync { get; set; }
 
     ~Consumer()
     {
@@ -30,36 +25,58 @@ public class Consumer<T>
 
     public void Dispose()
     {
-        Subscription.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    public void UnSubscribe()
+    public void OnNext(T value)
     {
-        Subscription.UnSubscribe();
+        if (Next is not null)
+        {
+            Next(value);
+        }
+
+        if (NextAsync is not null)
+        {
+            NextAsync(value);
+        }
     }
 
-    internal void Next(T value)
+    public void OnComplete()
     {
-        if (OnNext is null) return;
-        OnNext(value);
+        if (Complete is not null)
+        {
+            Complete();
+        }
+
+        if (CompleteAsync is not null)
+        {
+            CompleteAsync();
+        }
     }
 
-    internal void Complete()
+    public void OnError(Exception error)
     {
-        if (OnComplete is null) return;
-        OnComplete();
+        if (Error is not null)
+        {
+            Error(error);
+        }
+
+        if (ErrorAsync is not null)
+        {
+            ErrorAsync(error);
+        }
     }
 
-    internal void Error(Exception error)
+    public void OnCancel()
     {
-        if (OnError is null) return;
-        OnError(error);
-    }
+        if (Cancel is not null)
+        {
+            Cancel();
+        }
 
-    internal void Cancel()
-    {
-        if (OnCancel is null) return;
-        OnCancel();
+        if (CancelAsync is not null)
+        {
+            CancelAsync();
+        }
     }
 }

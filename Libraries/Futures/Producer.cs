@@ -4,13 +4,13 @@ namespace Futures;
 /// publishes/writes data to some Future
 /// </summary>
 /// <typeparam name="T">the type of data published</typeparam>
-public class Producer<T>
+public class Producer<T> : IProducer<T>
 {
-    private readonly Future<T> _destination;
+    private readonly IConsumer<T> _consumer;
 
-    internal Producer(Future<T> destination)
+    internal Producer(IConsumer<T> destination)
     {
-        _destination = destination;
+        _consumer = destination;
     }
 
     ~Producer()
@@ -25,41 +25,45 @@ public class Producer<T>
 
     public void Next(T value)
     {
-        _destination.Next(value);
+        _consumer.OnNext(value);
     }
 
     public Task NextAsync(T value)
     {
-        return _destination.NextAsync(value);
+        _consumer.OnNext(value);
+        return Task.CompletedTask;
     }
 
     public void Complete()
     {
-        _destination.Complete();
+        _consumer.OnComplete();
     }
 
     public Task CompleteAsync()
     {
-        return _destination.CompleteAsync();
+        _consumer.OnComplete();
+        return Task.CompletedTask;
     }
 
     public void Error(Exception error)
     {
-        _destination.Error(error);
+        _consumer.OnError(error);
     }
 
     public Task ErrorAsync(Exception error)
     {
-        return _destination.ErrorAsync(error);
+        _consumer.OnError(error);
+        return Task.CompletedTask;
     }
 
     public void Cancel()
     {
-        _destination.Cancel();
+        _consumer.OnCancel();
     }
 
     public Task CancelAsync()
     {
-        return _destination.CancelAsync();
+        _consumer.OnCancel();
+        return Task.CompletedTask;
     }
 }

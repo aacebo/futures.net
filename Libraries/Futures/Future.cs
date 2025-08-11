@@ -1,6 +1,6 @@
 namespace Futures;
 
-public partial class Future<T>
+public partial class Future<T> : IFuture<T>
 {
     public Guid Id { get; } = Guid.NewGuid();
     public State State { get; protected set; } = State.NotStarted;
