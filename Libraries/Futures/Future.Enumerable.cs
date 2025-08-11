@@ -43,15 +43,18 @@ public static class IAsyncEnumerableExtensions
 {
     public static Future<T> ToFuture<T>(this IAsyncEnumerable<T> enumerable)
     {
-        return new Future<T>(async (_, producer) =>
+        var future = new Future<IAsyncEnumerable<T>, T>(async (items, producer) =>
         {
-            await foreach (var value in enumerable)
+            await foreach (var value in items)
             {
                 producer.Next(value);
             }
 
             producer.Complete();
         });
+
+        future.NextAsync(enumerable);
+        return future;
     }
 }
 
