@@ -2,9 +2,32 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static Future<T> Do<T>(this Future<T> future, Action<T> next)
+    public static ITopic<T> Do<T>(this ITopic<T> future, Action<T> next)
     {
         return new Future<T>(value =>
+        {
+            future.Next(value);
+            next(value);
+            return value;
+        }, future.Token);
+    }
+
+    public static ITopic<T> Do<T>(this ITopic<T> future, Func<T, Task> next)
+    {
+        return new Future<T>(value =>
+        {
+            future.Next(value);
+            next(value).ConfigureAwait(false).GetAwaiter().GetResult();
+            return value;
+        }, future.Token);
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static IStream<T, TOut> Do<T, TOut>(this IStream<T, TOut> future, Action<TOut> next)
+    {
+        return new Future<T, TOut>(value =>
         {
             var output = future.Next(value);
             next(output);
@@ -12,9 +35,9 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T> Do<T>(this Future<T> future, Func<T, Task> next)
+    public static IStream<T, TOut> Do<T, TOut>(this IStream<T, TOut> future, Func<TOut, Task> next)
     {
-        return new Future<T>(value =>
+        return new Future<T, TOut>(value =>
         {
             var output = future.Next(value);
             next(output).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -25,30 +48,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T, TOut> Do<T, TOut>(this Future<T, TOut> future, Action<TOut> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            var output = future.Next(value);
-            next(output);
-            return output;
-        }, future.Token);
-    }
-
-    public static Future<T, TOut> Do<T, TOut>(this Future<T, TOut> future, Func<TOut, Task> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            var output = future.Next(value);
-            next(output).ConfigureAwait(false).GetAwaiter().GetResult();
-            return output;
-        }, future.Token);
-    }
-}
-
-public static partial class FutureExtensions
-{
-    public static Future<T1, T2, TOut> Do<T1, T2, TOut>(this Future<T1, T2, TOut> future, Action<TOut> next)
+    public static IStream<T1, T2, TOut> Do<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Action<TOut> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -58,7 +58,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T1, T2, TOut> Do<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<TOut, Task> next)
+    public static IStream<T1, T2, TOut> Do<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<TOut, Task> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {

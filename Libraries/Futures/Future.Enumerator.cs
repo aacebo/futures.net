@@ -12,10 +12,10 @@ internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
     protected List<T> _values;
     protected Subscription _subscription;
 
-    public Enumerator(Future<T> future)
+    public Enumerator(IFuture<T> future)
     {
         _values = [];
-        _subscription = future.Subscribe(new()
+        _subscription = future.Subscribe(new Consumer<T>()
         {
             OnNext = _values.Add,
             OnComplete = () => _complete = true,

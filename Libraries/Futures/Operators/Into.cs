@@ -2,39 +2,18 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static Future<T> Into<T>(this Future<T> future, Future<T> next)
+    public static IFuture<T> Into<T>(this ITopic<T> future, ITopic<T> next)
     {
-        return future.Pipe(value =>
+        return future.Map(value =>
         {
             next.Next(value);
             return value;
         });
     }
 
-    public static Future<T> Into<T, TNext>(this Future<T> future, Future<T, TNext> next)
+    public static IFuture<T> Into<T, TNext>(this ITopic<T> future, IStream<T, TNext> next)
     {
-        return future.Pipe(value =>
-        {
-            next.Next(value);
-            return value;
-        });
-    }
-}
-
-public static partial class FutureExtensions
-{
-    public static Future<T, TOut> Into<T, TOut, TNext>(this Future<T, TOut> future, Future<TOut> next)
-    {
-        return future.Pipe(value =>
-        {
-            next.Next(value);
-            return value;
-        });
-    }
-
-    public static Future<T, TOut> Into<T, TOut, TNext>(this Future<T, TOut> future, Future<TOut, TNext> next)
-    {
-        return future.Pipe(value =>
+        return future.Map(value =>
         {
             next.Next(value);
             return value;
@@ -44,18 +23,39 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this Future<T1, T2, TOut> future, Future<TOut> next)
+    public static IStream<T, TOut> Into<T, TOut, TNext>(this IStream<T, TOut> future, ITopic<TOut> next)
     {
-        return future.Pipe(value =>
+        return future.Map(value =>
         {
             next.Next(value);
             return value;
         });
     }
 
-    public static Future<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this Future<T1, T2, TOut> future, Future<TOut, TNext> next)
+    public static IStream<T, TOut> Into<T, TOut, TNext>(this IStream<T, TOut> future, IStream<TOut, TNext> next)
     {
-        return future.Pipe(value =>
+        return future.Map(value =>
+        {
+            next.Next(value);
+            return value;
+        });
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static IStream<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this IStream<T1, T2, TOut> future, ITopic<TOut> next)
+    {
+        return future.Map(value =>
+        {
+            next.Next(value);
+            return value;
+        });
+    }
+
+    public static IStream<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this IStream<T1, T2, TOut> future, IStream<TOut, TNext> next)
+    {
+        return future.Map(value =>
         {
             next.Next(value);
             return value;

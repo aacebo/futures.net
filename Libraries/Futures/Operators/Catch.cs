@@ -2,13 +2,14 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, T> next)
+    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, T> next)
     {
         return new Future<T>(value =>
         {
             try
             {
-                return future.Next(value);
+                future.Next(value);
+                return future.Value;
             }
             catch (Exception ex)
             {
@@ -17,13 +18,14 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task<T>> next)
+    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, Task<T>> next)
     {
         return new Future<T>(value =>
         {
             try
             {
-                return Task.FromResult(future.Next(value));
+                future.Next(value);
+                return Task.FromResult(future.Value);
             }
             catch (Exception ex)
             {
@@ -32,13 +34,14 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T> Catch<T>(this Future<T> future, Action<Exception, T> next)
+    public static ITopic<T> Catch<T>(this ITopic<T> future, Action<Exception, T> next)
     {
         return new Future<T>(value =>
         {
             try
             {
-                return Task.FromResult(future.Next(value));
+                future.Next(value);
+                return Task.FromResult(value);
             }
             catch (Exception ex)
             {
@@ -48,13 +51,14 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task> next)
+    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, Task> next)
     {
         return new Future<T>(async value =>
         {
             try
             {
-                return future.Next(value);
+                future.Next(value);
+                return value;
             }
             catch (Exception ex)
             {
@@ -67,7 +71,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, TOut> next)
+    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, TOut> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -82,7 +86,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task<TOut>> next)
+    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, Task<TOut>> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -97,7 +101,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Action<Exception, T> next)
+    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Action<Exception, T> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -113,7 +117,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task> next)
+    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, Task> next)
     {
         return new Future<T, TOut>(async value =>
         {
@@ -132,7 +136,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
+    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -147,7 +151,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
+    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -162,7 +166,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Action<Exception, T1, T2> next)
+    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Action<Exception, T1, T2> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -178,7 +182,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
+    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
     {
         return new Future<T1, T2, TOut>(async (a, b) =>
         {

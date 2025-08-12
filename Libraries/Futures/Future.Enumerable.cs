@@ -20,9 +20,45 @@ public partial class Future<T> : IEnumerable<T>, IAsyncEnumerable<T>
     }
 }
 
+public partial class Future<T, TOut> : IEnumerable<TOut>, IAsyncEnumerable<TOut>
+{
+    public IEnumerator<TOut> GetEnumerator()
+    {
+        return new Enumerator<TOut>(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IAsyncEnumerator<TOut> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        return new Enumerator<TOut>(this);
+    }
+}
+
+public partial class Future<T1, T2, TOut> : IEnumerable<TOut>, IAsyncEnumerable<TOut>
+{
+    public IEnumerator<TOut> GetEnumerator()
+    {
+        return new Enumerator<TOut>(this);
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IAsyncEnumerator<TOut> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        return new Enumerator<TOut>(this);
+    }
+}
+
 public static class IEnumerableExtensions
 {
-    public static Future<T> ToFuture<T>(this IEnumerable<T> enumerable)
+    public static IFuture<T> ToFuture<T>(this IEnumerable<T> enumerable)
     {
         var future = new Future<IEnumerable<T>, T>((items, producer) =>
         {
@@ -34,14 +70,14 @@ public static class IEnumerableExtensions
             producer.Complete();
         });
 
-        future.NextAsync(enumerable);
+        future.Next(enumerable);
         return future;
     }
 }
 
 public static class IAsyncEnumerableExtensions
 {
-    public static Future<T> ToFuture<T>(this IAsyncEnumerable<T> enumerable)
+    public static IFuture<T> ToFuture<T>(this IAsyncEnumerable<T> enumerable)
     {
         var future = new Future<IAsyncEnumerable<T>, T>(async (items, producer) =>
         {
@@ -53,7 +89,7 @@ public static class IAsyncEnumerableExtensions
             producer.Complete();
         });
 
-        future.NextAsync(enumerable);
+        future.Next(enumerable);
         return future;
     }
 }

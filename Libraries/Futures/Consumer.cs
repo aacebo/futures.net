@@ -6,17 +6,23 @@ namespace Futures;
 /// <typeparam name="T">the type of data consumed</typeparam>
 public class Consumer<T> : IConsumer<T>
 {
-    public Action<T>? Next { get; set; }
-    public Func<T, Task>? NextAsync { get; set; }
+    public Action<T>? OnNext { get; set; }
+    public Action? OnComplete { get; set; }
+    public Action<Exception>? OnError { get; set; }
+    public Action? OnCancel { get; set; }
 
-    public Action? Complete { get; set; }
-    public Func<Task>? CompleteAsync { get; set; }
+    public Consumer()
+    {
 
-    public Action<Exception>? Error { get; set; }
-    public Func<Exception, Task>? ErrorAsync { get; set; }
+    }
 
-    public Action? Cancel { get; set; }
-    public Func<Task>? CancelAsync { get; set; }
+    public Consumer(ITopic<T> topic)
+    {
+        OnNext = topic.Next;
+        OnComplete = topic.Complete;
+        OnError = topic.Error;
+        OnCancel = topic.Cancel;
+    }
 
     ~Consumer()
     {
@@ -28,55 +34,35 @@ public class Consumer<T> : IConsumer<T>
         GC.SuppressFinalize(this);
     }
 
-    public void OnNext(T value)
+    public void Next(T value)
     {
-        if (Next is not null)
+        if (OnNext is not null)
         {
-            Next(value);
-        }
-
-        if (NextAsync is not null)
-        {
-            NextAsync(value);
+            OnNext(value);
         }
     }
 
-    public void OnComplete()
+    public void Complete()
     {
-        if (Complete is not null)
+        if (OnComplete is not null)
         {
-            Complete();
-        }
-
-        if (CompleteAsync is not null)
-        {
-            CompleteAsync();
+            OnComplete();
         }
     }
 
-    public void OnError(Exception error)
+    public void Error(Exception error)
     {
-        if (Error is not null)
+        if (OnError is not null)
         {
-            Error(error);
-        }
-
-        if (ErrorAsync is not null)
-        {
-            ErrorAsync(error);
+            OnError(error);
         }
     }
 
-    public void OnCancel()
+    public void Cancel()
     {
-        if (Cancel is not null)
+        if (OnCancel is not null)
         {
-            Cancel();
-        }
-
-        if (CancelAsync is not null)
-        {
-            CancelAsync();
+            OnCancel();
         }
     }
 }

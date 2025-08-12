@@ -2,7 +2,7 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static Future<T> Retry<T>(this Future<T> future, int attempts = 3)
+    public static ITopic<T> Retry<T>(this ITopic<T> future, int attempts = 3)
     {
         return new Future<T>(value =>
         {
@@ -12,7 +12,8 @@ public static partial class FutureExtensions
             {
                 try
                 {
-                    return future.Next(value);
+                    future.Next(value);
+                    return value;
                 }
                 catch (Exception ex)
                 {
@@ -27,7 +28,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T, TOut> Retry<T, TOut>(this Future<T, TOut> future, int attempts = 3)
+    public static IStream<T, TOut> Retry<T, TOut>(this IStream<T, TOut> future, int attempts = 3)
     {
         return new Future<T, TOut>(value =>
         {
@@ -52,7 +53,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static Future<T1, T2, TOut> Retry<T1, T2, TOut>(this Future<T1, T2, TOut> future, int attempts = 3)
+    public static IStream<T1, T2, TOut> Retry<T1, T2, TOut>(this IStream<T1, T2, TOut> future, int attempts = 3)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
