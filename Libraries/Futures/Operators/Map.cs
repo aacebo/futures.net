@@ -30,3 +30,26 @@ public sealed class Map<T, TOut> : IOperator<T, TOut>
         }, source.Token);
     }
 }
+
+public static partial class FutureExtensions
+{
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, int, TNext> next)
+    {
+        return future.Pipe(new Map<T, TNext>(next));
+    }
+
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, int, Task<TNext>> next)
+    {
+        return future.Pipe(new Map<T, TNext>(next));
+    }
+
+    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, int, TNext> next)
+    {
+        return future.Pipe(new Map<TOut, TNext>(next));
+    }
+
+    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, int, Task<TNext>> next)
+    {
+        return future.Pipe(new Map<TOut, TNext>(next));
+    }
+}

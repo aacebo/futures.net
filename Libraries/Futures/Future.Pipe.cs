@@ -2,6 +2,11 @@ namespace Futures;
 
 public partial class Future<T> : IFuture<T>
 {
+    public IFuture<TNext> Pipe<TNext>(IOperator<T, TNext> @operator)
+    {
+        return @operator.Invoke(this);
+    }
+
     public IFuture<TNext> Pipe<TNext>(Func<T, TNext> next)
     {
         var future = new Future<TNext>(Token);
