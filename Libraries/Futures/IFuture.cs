@@ -11,11 +11,11 @@ public interface IFuture<T> : IDisposable, IAsyncDisposable, IEnumerable<T>, IAs
     T Value { get; }
     CancellationToken Token { get; }
 
-    public bool IsComplete => IsSuccess || IsError || IsCancelled;
-    public bool IsStarted => State == State.Started;
-    public bool IsSuccess => State == State.Success;
-    public bool IsError => State == State.Error;
-    public bool IsCancelled => State == State.Cancelled;
+    public bool IsComplete { get; }
+    public bool IsStarted { get; }
+    public bool IsSuccess { get; }
+    public bool IsError { get; }
+    public bool IsCancelled { get; }
 
     T Resolve();
     Task<T> AsTask();
@@ -24,6 +24,9 @@ public interface IFuture<T> : IDisposable, IAsyncDisposable, IEnumerable<T>, IAs
 
     IFuture<TNext> Pipe<TNext>(Func<T, TNext> next);
     IFuture<TNext> Pipe<TNext>(Func<T, Task<TNext>> next);
+    IFuture<TNext> Pipe<TNext>(Func<T, IFuture<TNext>> next);
     IFuture<T> Pipe(ITopic<T> topic);
+    IFuture<T> Pipe(ITopic<Task<T>> topic);
     IFuture<TNext> Pipe<TNext>(IStream<T, TNext> stream);
+    IFuture<TNext> Pipe<TNext>(IStream<T, Task<TNext>> stream);
 }

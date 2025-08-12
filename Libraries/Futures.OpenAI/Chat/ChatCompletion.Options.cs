@@ -4,9 +4,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> Options<TOut>
+    public static IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> Options<TOut>
     (
-        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future,
+        this IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future,
         OAI.ChatCompletionOptions options
     )
     {

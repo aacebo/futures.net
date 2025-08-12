@@ -55,12 +55,17 @@ public abstract class FutureBase<T>
 
     public IFuture<TNext> Pipe<TNext>(Func<T, TNext> next)
     {
-        return new Future<T, TNext>(v => next(Value), Token);
+        return new Future<T, TNext>(v => next(v), Token);
     }
 
     public IFuture<TNext> Pipe<TNext>(Func<T, Task<TNext>> next)
     {
         return new Future<T, TNext>(v => next(v).ConfigureAwait(false).GetAwaiter().GetResult());
+    }
+
+    public IFuture<TNext> Pipe<TNext>(Func<T, IFuture<TNext>> next)
+    {
+        return new Future<T, TNext>(v => next(v).Resolve());
     }
 
     public IFuture<T> Pipe(ITopic<T> topic)
@@ -72,7 +77,21 @@ public abstract class FutureBase<T>
         });
     }
 
+    public IFuture<T> Pipe(ITopic<Task<T>> topic)
+    {
+        return new Future<T>(v =>
+        {
+            topic.Next(Task.FromResult(v));
+            return v;
+        });
+    }
+
     public IFuture<TNext> Pipe<TNext>(IStream<T, TNext> stream)
+    {
+        return new Future<T, TNext>(stream.Next);
+    }
+
+    public IFuture<TNext> Pipe<TNext>(IStream<T, Task<TNext>> stream)
     {
         return new Future<T, TNext>(stream.Next);
     }
