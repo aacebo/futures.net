@@ -8,8 +8,8 @@ public class WhereTests
     [Fact]
     public void Should_Filter_List()
     {
-        var future = new List<int>()
-            .Pipe(v => v.Select(o => (float)o))
+        var future = new Future<List<int>>()
+            .Map(v => v.Select(o => (float)o))
             .Where(v => v >= 1000);
 
         Assert.True(future.Next([100, 200, 50000, -500]).SequenceEqual([50000]));
@@ -18,10 +18,10 @@ public class WhereTests
     [Fact]
     public void Should_Filter_Dictionary()
     {
-        var future = new Dictionary<int, string>()
-            .Pipe()
+        var future = new Future<Dictionary<int, string>>()
+            .Map(v => v)
             .Where(v => v.Key > 3)
-            .Pipe(v => v.Select(o => o.Value));
+            .Map(v => v.Select(o => o.Value));
 
         Assert.True(
             future.Next(new()
@@ -38,10 +38,10 @@ public class WhereTests
     [Fact]
     public void Should_Filter_NonEnumerable()
     {
-        var future = 0
-            .Pipe()
+        var future = new Future<int>()
+            .Map(v => v)
             .Where(value => value % 2 == 0)
-            .Pipe(value => value + 100);
+            .Map(value => value + 100);
 
         Assert.Equal(100, future.Next(0));
         Assert.Equal(100, future.Next(1));

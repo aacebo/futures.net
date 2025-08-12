@@ -8,10 +8,10 @@ public class DebounceTests
     public async Task Should_Debounce()
     {
         var future = new Future<int>(value => value)
-            .Pipe(value => value + 1)
+            .Map(value => value + 1)
             .Debounce(200);
 
-        future.Subscribe(new()
+        future.Subscribe(new Consumer<int>()
         {
             OnNext = value => Assert.Equal(10, value)
         });

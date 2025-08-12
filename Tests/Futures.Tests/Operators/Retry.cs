@@ -9,7 +9,7 @@ public class RetryTests
     {
         var i = 0;
         var future = new Future<int>()
-            .Pipe(value =>
+            .Map(value =>
             {
                 i++;
 

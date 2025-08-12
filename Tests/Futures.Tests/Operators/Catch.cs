@@ -8,8 +8,8 @@ public class CatchTests
     public void Should_CatchError()
     {
         var future = new Future<int>()
-            .Pipe(value => value + 200)
-            .Pipe(value =>
+            .Map(value => value + 200)
+            .Map(value =>
             {
                 if (value % 2 != 0)
                 {

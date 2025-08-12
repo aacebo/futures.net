@@ -7,11 +7,10 @@ public class MergeTests
     [Fact]
     public void Should_Merge()
     {
-        var a = new Future<string>().AsProducer();
-        var b = new Future<int>().AsProducer();
+        var a = new Future<string, string>(v => v);
+        var b = new Future<int, int>(v => v);
         var merged = a.Merge(b);
         var input = new Future<int>()
-            .AsProducer()
             .Do(value => merged.Next((value.ToString(), value)));
 
         for (var i = 0; i < 10; i++)
