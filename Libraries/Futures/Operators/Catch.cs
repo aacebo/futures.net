@@ -1,200 +1,52 @@
 namespace Futures.Operators;
 
-public static partial class FutureExtensions
+public sealed class Catch<T> : IOperator<T>
 {
-    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, T> next)
+    private readonly Func<Exception, IFuture<T>, T> _next;
+
+    public Catch(Func<Exception, IFuture<T>, T> next)
     {
-        return new Future<T>(value =>
-        {
-            try
-            {
-                future.Next(value);
-                return future.Value;
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
+        _next = next;
     }
 
-    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, Task<T>> next)
+    public Catch(Func<Exception, IFuture<T>, Task<T>> next)
     {
-        return new Future<T>(value =>
-        {
-            try
-            {
-                future.Next(value);
-                return Task.FromResult(future.Value);
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
+        _next = (err, caught) => next(err, caught).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public static ITopic<T> Catch<T>(this ITopic<T> future, Action<Exception, T> next)
+    public IFuture<T> Invoke(IFuture<T> source)
     {
-        return new Future<T>(value =>
+        return new Future<T>((destination, consumer) =>
         {
-            try
-            {
-                future.Next(value);
-                return Task.FromResult(value);
-            }
-            catch (Exception ex)
-            {
-                next(ex, value);
-                return Task.FromResult(value);
-            }
-        }, future.Token);
-    }
+            var sync = false;
+            ISubscription? subscription = null;
+            Future<T>? res = null;
 
-    public static ITopic<T> Catch<T>(this ITopic<T> future, Func<Exception, T, Task> next)
-    {
-        return new Future<T>(async value =>
-        {
-            try
+            subscription = source.Subscribe(new Consumer<T>(destination)
             {
-                future.Next(value);
-                return value;
-            }
-            catch (Exception ex)
-            {
-                await next(ex, value);
-                return value;
-            }
-        }, future.Token);
-    }
-}
+                OnError = err =>
+                {
+                    res = Future<T>.From(_next(err, Invoke(source)));
 
-public static partial class FutureExtensions
-{
-    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, TOut> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            try
-            {
-                return future.Next(value);
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
-    }
+                    if (subscription is not null)
+                    {
+                        subscription.UnSubscribe();
+                        subscription = null;
+                        res.Subscribe(destination);
+                    }
+                    else
+                    {
+                        sync = true;
+                    }
+                }
+            });
 
-    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, Task<TOut>> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            try
+            if (sync)
             {
-                return Task.FromResult(future.Next(value));
+                subscription.UnSubscribe();
+                subscription = null;
+                res?.Subscribe(destination);
             }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
-    }
-
-    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Action<Exception, T> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(value));
-            }
-            catch (Exception ex)
-            {
-                next(ex, value);
-                return Task.FromResult(future.Value);
-            }
-        }, future.Token);
-    }
-
-    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, Task> next)
-    {
-        return new Future<T, TOut>(async value =>
-        {
-            try
-            {
-                return future.Next(value);
-            }
-            catch (Exception ex)
-            {
-                await next(ex, value);
-                return future.Value;
-            }
-        }, future.Token);
-    }
-}
-
-public static partial class FutureExtensions
-{
-    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
-    {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return future.Next(a, b);
-            }
-            catch (Exception ex)
-            {
-                return next(ex, a, b);
-            }
-        }, future.Token);
-    }
-
-    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
-    {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(a, b));
-            }
-            catch (Exception ex)
-            {
-                return next(ex, a, b);
-            }
-        }, future.Token);
-    }
-
-    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Action<Exception, T1, T2> next)
-    {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(a, b));
-            }
-            catch (Exception ex)
-            {
-                next(ex, a, b);
-                return Task.FromResult(future.Value);
-            }
-        }, future.Token);
-    }
-
-    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
-    {
-        return new Future<T1, T2, TOut>(async (a, b) =>
-        {
-            try
-            {
-                return future.Next(a, b);
-            }
-            catch (Exception ex)
-            {
-                await next(ex, a, b);
-                return future.Value;
-            }
-        }, future.Token);
+        }, source.Token);
     }
 }

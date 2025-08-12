@@ -9,11 +9,11 @@ internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 
     protected bool _complete = false;
     protected Queue<T> _values;
-    protected Subscription _subscription;
+    protected ISubscription _subscription;
 
-    public Enumerator(FutureBase<T> future)
+    public Enumerator(IFuture<T> future)
     {
-        _values = new(future.AsList());
+        _values = new(future);
         _complete = future.IsComplete;
         _subscription = future.Subscribe(new Consumer<T>()
         {

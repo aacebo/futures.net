@@ -1,10 +1,20 @@
 namespace Futures;
 
-public class Subscription
+public interface ISubscription : IDisposable
+{
+    public bool IsOpen { get; }
+    public void UnSubscribe();
+    public ISubscription Limit(int limit);
+    public ISubscription Timeout(TimeSpan after);
+}
+
+public class Subscription<T> : ISubscription
 {
     public bool IsOpen { get; private set; }
 
-    protected readonly Action _unsubscribe;
+    private readonly Action _unsubscribe;
+    private int? _limit;
+    private int _count = 0;
 
     internal Subscription()
     {
@@ -35,5 +45,27 @@ public class Subscription
 
         _unsubscribe();
         IsOpen = false;
+    }
+
+    public ISubscription Limit(int limit)
+    {
+        _limit = limit;
+        return this;
+    }
+
+    public ISubscription Timeout(TimeSpan after)
+    {
+        Task.Delay(after).ContinueWith(_ => UnSubscribe());
+        return this;
+    }
+
+    internal void OnNext()
+    {
+        _count++;
+
+        if (_limit != null && _count >= _limit)
+        {
+            UnSubscribe();
+        }
     }
 }

@@ -4,7 +4,7 @@ namespace Futures;
 /// consumes/reads data from some Future
 /// </summary>
 /// <typeparam name="T">the type of data consumed</typeparam>
-public class Consumer<T> : IConsumer<T>
+public class Consumer<T> : IConsumer<T>, IDisposable
 {
     public Action<T>? OnNext { get; set; }
     public Action? OnComplete { get; set; }
@@ -16,12 +16,12 @@ public class Consumer<T> : IConsumer<T>
 
     }
 
-    public Consumer(ITopic<T> topic)
+    public Consumer(IFuture<T> future)
     {
-        OnNext = topic.Next;
-        OnComplete = topic.Complete;
-        OnError = topic.Error;
-        OnCancel = topic.Cancel;
+        OnNext = future.Next;
+        OnComplete = future.Complete;
+        OnError = future.Error;
+        OnCancel = future.Cancel;
     }
 
     ~Consumer()

@@ -1,127 +1,145 @@
+using System.Collections;
+
 namespace Futures;
 
-public partial class Future<T> : FutureBase<T>, IFuture<T>
+public partial class Future<T> : IFuture<T>
 {
-    private readonly Func<T, T> _resolve;
+    public Guid Id { get; } = Guid.NewGuid();
+    public State State { get; protected set; } = State.NotStarted;
+    public CancellationToken Token { get; protected set; }
+    public T Value { get; protected set; } = default!;
 
-    public Future(CancellationToken cancellation = default) : base(cancellation)
+    public bool IsComplete => IsSuccess || IsError || IsCancelled;
+    public bool IsStarted => State == State.Started;
+    public bool IsSuccess => State == State.Success;
+    public bool IsError => State == State.Error;
+    public bool IsCancelled => State == State.Cancelled;
+
+    protected readonly TaskCompletionSource<T> _source;
+    protected readonly List<(Guid, ISubscription, IConsumer<T>)> _consumers = [];
+    protected readonly Subscriber _subscribe;
+
+    public Future(CancellationToken cancellation = default)
     {
-        _resolve = value => value;
+        Token = cancellation;
+        _source = new(cancellation);
+        _subscribe = (_, _) => () => { };
     }
 
-    public Future(T value, CancellationToken cancellation = default) : base(cancellation)
+    public Future(Action<IFuture<T>, IConsumer<T>> subscribe, CancellationToken cancellation = default)
     {
-        Value = value;
-        _resolve = value => value;
-    }
-
-    public Future(Func<T, T> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = resolve;
-    }
-
-    public Future(Func<T, Task<T>> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = value => resolve(value).ConfigureAwait(false).GetAwaiter().GetResult();
-    }
-
-    public Future(ITopic<T>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = value =>
+        Token = cancellation;
+        _source = new(cancellation);
+        _subscribe = (source, consumer) =>
         {
-            var future = new Future<T>(cancellation);
-            resolver(value, new Consumer<T>(future));
-            return future.Resolve();
+            subscribe(source, consumer);
+            return () => { };
         };
     }
 
-    ~Future()
+    public Future(Func<IFuture<T>, IConsumer<T>, Action> subscribe, CancellationToken cancellation = default)
     {
-        Dispose();
+        Token = cancellation;
+        _source = new(cancellation);
+        _subscribe = (source, consumer) => subscribe(source, consumer);
     }
+
+    public T Resolve()
+    {
+        return _source.Task.ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public Task<T> AsTask()
+    {
+        return _source.Task;
+    }
+
+    public ValueTask<T> AsValueTask()
+    {
+        return new ValueTask<T>(_source.Task);
+    }
+
+    public ISubscription Subscribe(IConsumer<T> consumer)
+    {
+        var id = Guid.NewGuid();
+        var subscription = new Subscription<T>(() => UnSubscribe(id));
+        _subscribe(this, consumer);
+        _consumers.Add((id, subscription, consumer));
+        return subscription;
+    }
+
+    public ISubscription Subscribe(
+        Action<T>? next = null,
+        Action? complete = null,
+        Action<Exception>? error = null,
+        Action? cancel = null
+    )
+    {
+        var id = Guid.NewGuid();
+        var subscription = new Subscription<T>(() => UnSubscribe(id));
+
+        _consumers.Add((id, subscription, new Consumer<T>()
+        {
+            OnNext = next,
+            OnComplete = complete,
+            OnError = error,
+            OnCancel = cancel
+        }));
+
+        return subscription;
+    }
+
+    internal void UnSubscribe(Guid id)
+    {
+        var i = _consumers.FindIndex(s => s.Item1 == id);
+
+        if (i == -1)
+        {
+            return;
+        }
+
+        _consumers.RemoveAt(i);
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        throw new NotImplementedException();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public delegate Action Subscriber(IFuture<T> destination, IConsumer<T> consumer);
 
     public static Future<T> From(T value)
     {
-        var future = new Future<T>();
-        future.Next(value);
-        future.Complete();
-        return future;
-    }
-
-    public static Future<T> From(Exception error)
-    {
-        var future = new Future<T>();
-        future.Error(error);
-        return future;
-    }
-}
-
-public partial class Future<T, TOut> : FutureBase<TOut>, IFuture<TOut>
-{
-    private readonly Func<T, TOut> _resolve;
-
-    public Future(Func<T, TOut> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = resolve;
-    }
-
-    public Future(Func<T, Task<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = value => resolve(value).ConfigureAwait(false).GetAwaiter().GetResult();
-    }
-
-    public Future(ITransformer<T, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = value =>
+        return new Future<T>((_, consumer) =>
         {
-            var future = new Future<TOut>(cancellation);
-            resolver(value, new Consumer<TOut>(future));
-            future.Subscribe(v =>
+            consumer.Next(value);
+            consumer.Complete();
+        });
+    }
+
+    public static Future<T> From(Task<T> task)
+    {
+        return new Future<T>(async (_, consumer) =>
+        {
+            try
             {
-                Value = v;
-
-                foreach (var (_, consumer) in _consumers)
-                {
-                    consumer.Next(v);
-                }
-            });
-
-            return future.Resolve();
-        };
-    }
-
-    ~Future()
-    {
-        Dispose();
-    }
-}
-
-public partial class Future<T1, T2, TOut> : FutureBase<TOut>, IFuture<TOut>
-{
-    private readonly Func<T1, T2, TOut> _resolve;
-
-    public Future(Func<T1, T2, TOut> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = resolve;
-    }
-
-    public Future(Func<T1, T2, Task<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = (a, b) => resolve(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
-    }
-
-    public Future(ITransformer<T1, T2, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _resolve = (a, b) =>
-        {
-            var future = new Future<TOut>(cancellation);
-            resolver(a, b, new Consumer<TOut>(future));
-            return future.Resolve();
-        };
-    }
-
-    ~Future()
-    {
-        Dispose();
+                consumer.Next(await task);
+                consumer.Complete();
+            }
+            catch (Exception err)
+            {
+                consumer.Error(err);
+            }
+        });
     }
 }

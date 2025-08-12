@@ -1,4 +1,3 @@
-
 namespace Futures;
 
 public partial class Future<T> : IConsumer<T>
@@ -11,10 +10,9 @@ public partial class Future<T> : IConsumer<T>
         }
 
         State = State.Started;
-        value = _resolve(value);
         Value = value;
 
-        foreach (var (_, consumer) in _consumers)
+        foreach (var (_, _, consumer) in _consumers)
         {
             consumer.Next(value);
         }
@@ -35,7 +33,7 @@ public partial class Future<T> : IConsumer<T>
         State = State.Success;
         _source.TrySetResult(Value);
 
-        foreach (var (_, consumer) in _consumers)
+        foreach (var (_, _, consumer) in _consumers)
         {
             consumer.Complete();
         }
@@ -51,7 +49,7 @@ public partial class Future<T> : IConsumer<T>
         State = State.Error;
         _source.TrySetException(ex);
 
-        foreach (var (_, consumer) in _consumers)
+        foreach (var (_, _, consumer) in _consumers)
         {
             consumer.Error(ex);
         }
@@ -64,7 +62,7 @@ public partial class Future<T> : IConsumer<T>
         State = State.Cancelled;
         _source.TrySetCanceled();
 
-        foreach (var (_, consumer) in _consumers)
+        foreach (var (_, _, consumer) in _consumers)
         {
             consumer.Cancel();
         }
