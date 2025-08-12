@@ -56,25 +56,6 @@ public partial class Future<T1, T2, TOut> : IEnumerable<TOut>, IAsyncEnumerable<
     }
 }
 
-public static class IEnumerableExtensions
-{
-    public static IFuture<T> ToFuture<T>(this IEnumerable<T> enumerable)
-    {
-        var future = new Future<IEnumerable<T>, T>((items, producer) =>
-        {
-            foreach (var value in items)
-            {
-                producer.Next(value);
-            }
-
-            producer.Complete();
-        });
-
-        future.Next(enumerable);
-        return future;
-    }
-}
-
 public static class IAsyncEnumerableExtensions
 {
     public static IFuture<T> ToFuture<T>(this IAsyncEnumerable<T> enumerable)

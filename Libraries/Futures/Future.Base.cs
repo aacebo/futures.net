@@ -4,8 +4,12 @@ public abstract class FutureBase<T>
 {
     public Guid Id { get; } = Guid.NewGuid();
     public State State { get; protected set; } = State.NotStarted;
-    public T Value { get; protected set; }
     public CancellationToken Token { get; protected set; }
+    public T Value
+    {
+        get => _values.LastOrDefault()!;
+        protected set => _values.Add(value);
+    }
 
     public bool IsComplete => IsSuccess || IsError || IsCancelled;
     public bool IsStarted => State == State.Started;
@@ -15,19 +19,19 @@ public abstract class FutureBase<T>
 
     protected readonly TaskCompletionSource<T> _source;
     protected readonly List<(Guid, IConsumer<T>)> _consumers = [];
+    protected readonly List<T> _values = [];
 
     public FutureBase(CancellationToken cancellation = default)
     {
         Token = cancellation;
         _source = new(cancellation);
-        Value = default!;
     }
 
     public FutureBase(T value, CancellationToken cancellation = default)
     {
         Token = cancellation;
-        _source = new(cancellation);
         Value = value;
+        _source = new(cancellation);
     }
 
     public T Resolve()
@@ -45,11 +49,37 @@ public abstract class FutureBase<T>
         return new ValueTask<T>(_source.Task);
     }
 
+    public IList<T> AsList()
+    {
+        return _values;
+    }
+
     public Subscription Subscribe(IConsumer<T> consumer)
     {
         var id = Guid.NewGuid();
         var subscription = new Subscription(() => UnSubscribe(id));
         _consumers.Add((id, consumer));
+        return subscription;
+    }
+
+    public Subscription Subscribe(
+        Action<T>? next = null,
+        Action? complete = null,
+        Action<Exception>? error = null,
+        Action? cancel = null
+    )
+    {
+        var id = Guid.NewGuid();
+        var subscription = new Subscription(() => UnSubscribe(id));
+        
+        _consumers.Add((id, new Consumer<T>()
+        {
+            OnNext = next,
+            OnComplete = complete,
+            OnError = error,
+            OnCancel = cancel    
+        }));
+
         return subscription;
     }
 

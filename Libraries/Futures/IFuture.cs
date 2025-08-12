@@ -20,7 +20,14 @@ public interface IFuture<T> : IDisposable, IAsyncDisposable, IEnumerable<T>, IAs
     T Resolve();
     Task<T> AsTask();
     ValueTask<T> AsValueTask();
+    IList<T> AsList();
     Subscription Subscribe(IConsumer<T> consumer);
+    Subscription Subscribe(
+        Action<T>? next = null,
+        Action? complete = null,
+        Action<Exception>? error = null,
+        Action? cancel = null
+    );
 
     IFuture<TNext> Pipe<TNext>(Func<T, TNext> next);
     IFuture<TNext> Pipe<TNext>(Func<T, Task<TNext>> next);

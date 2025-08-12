@@ -1,12 +1,25 @@
+using System.Collections.Concurrent;
+
 namespace Futures.Collections;
 
 public partial class Stream<T, TOut> : FutureBase<TOut>, IFuture<TOut>, IStream<T, TOut>
 {
+    private readonly ConcurrentQueue<TOut> _queue = new();
     private readonly Func<IEnumerable<T>, IEnumerable<TOut>> _resolve;
 
     public Stream(Func<IEnumerable<T>, IEnumerable<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
     {
         _resolve = resolve;
+    }
+
+    public Stream(Func<IEnumerable<T>, TOut> resolve, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _resolve = values => [resolve(values)];
+    }
+
+    public Stream(Func<IEnumerable<T>, Task<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _resolve = values => [resolve(values).ConfigureAwait(false).GetAwaiter().GetResult()];
     }
 
     public IEnumerable<TOut> Next(params T[] values)
@@ -22,17 +35,11 @@ public partial class Stream<T, TOut> : FutureBase<TOut>, IFuture<TOut>, IStream<
         }
 
         State = State.Started;
-        var output = _resolve(values);
 
         foreach (var value in _resolve(values))
         {
+            _queue.Enqueue(value);
             Value = value;
-
-            foreach (var (_, consumer) in _consumers)
-            {
-                consumer.Next(value);
-            }
-
             yield return value;
         }
     }

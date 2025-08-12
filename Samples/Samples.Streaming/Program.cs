@@ -9,7 +9,7 @@ var future = Providers.From
     .ChatStream(client.GetChatClient("gpt-3.5-turbo"))
     .Storage(messages);
 
-foreach (var update in future.Send("hi, how are you today?"))
+foreach (var update in future.Send("hi, how are you today? Tell me a long story"))
 {
     foreach (var chunk in update.ContentUpdate)
     {

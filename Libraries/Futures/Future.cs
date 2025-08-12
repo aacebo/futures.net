@@ -76,6 +76,16 @@ public partial class Future<T, TOut> : FutureBase<TOut>, IFuture<TOut>
         {
             var future = new Future<TOut>(cancellation);
             resolver(value, new Consumer<TOut>(future));
+            future.Subscribe(v =>
+            {
+                Value = v;
+
+                foreach (var (_, consumer) in _consumers)
+                {
+                    consumer.Next(v);
+                }
+            });
+
             return future.Resolve();
         };
     }
