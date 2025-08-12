@@ -86,14 +86,14 @@ public abstract class FutureBase<T>
         });
     }
 
-    public IFuture<TNext> Pipe<TNext>(IStream<T, TNext> stream)
+    public IFuture<TNext> Pipe<TNext>(ITransformer<T, TNext> next)
     {
-        return new Future<T, TNext>(stream.Next);
+        return new Future<T, TNext>(next.Next);
     }
 
-    public IFuture<TNext> Pipe<TNext>(IStream<T, Task<TNext>> stream)
+    public IFuture<TNext> Pipe<TNext>(ITransformer<T, Task<TNext>> next)
     {
-        return new Future<T, TNext>(stream.Next);
+        return new Future<T, TNext>(next.Next);
     }
 
     internal void UnSubscribe(Guid id)

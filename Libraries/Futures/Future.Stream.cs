@@ -1,6 +1,6 @@
 namespace Futures;
 
-public partial class Future<T, TOut> : IStream<T, TOut>
+public partial class Future<T, TOut> : ITransformer<T, TOut>
 {
     public TOut Next(T value)
     {
@@ -73,23 +73,23 @@ public partial class Future<T, TOut> : IStream<T, TOut>
         }
     }
 
-    public IStream<T, TNext> Map<TNext>(Func<TOut, TNext> next)
+    public ITransformer<T, TNext> Map<TNext>(Func<TOut, TNext> next)
     {
         return new Future<T, TNext>(v => next(Next(v)), Token);
     }
 
-    public IStream<T, TNext> Map<TNext>(Func<TOut, Task<TNext>> next)
+    public ITransformer<T, TNext> Map<TNext>(Func<TOut, Task<TNext>> next)
     {
         return new Future<T, TNext>(v => next(Next(v)).ConfigureAwait(false).GetAwaiter().GetResult(), Token);
     }
 
-    public IStream<T, TNext> Map<TNext>(IStream<TOut, TNext> transform)
+    public ITransformer<T, TNext> Map<TNext>(ITransformer<TOut, TNext> transform)
     {
         return new Future<T, TNext>(v => transform.Next(Next(v)), Token);
     }
 }
 
-public partial class Future<T1, T2, TOut> : IStream<T1, T2, TOut>
+public partial class Future<T1, T2, TOut> : ITransformer<T1, T2, TOut>
 {
     public TOut Next(T1 a, T2 b)
     {
@@ -162,17 +162,17 @@ public partial class Future<T1, T2, TOut> : IStream<T1, T2, TOut>
         }
     }
 
-    public IStream<T1, T2, TNext> Map<TNext>(Func<TOut, TNext> next)
+    public ITransformer<T1, T2, TNext> Map<TNext>(Func<TOut, TNext> next)
     {
         return new Future<T1, T2, TNext>((a, b) => next(Next(a, b)), Token);
     }
 
-    public IStream<T1, T2, TNext> Map<TNext>(Func<TOut, Task<TNext>> next)
+    public ITransformer<T1, T2, TNext> Map<TNext>(Func<TOut, Task<TNext>> next)
     {
         return new Future<T1, T2, TNext>((a, b) => next(Next(a, b)).ConfigureAwait(false).GetAwaiter().GetResult(), Token);
     }
 
-    public IStream<T1, T2, TNext> Map<TNext>(IStream<TOut, TNext> transform)
+    public ITransformer<T1, T2, TNext> Map<TNext>(ITransformer<TOut, TNext> transform)
     {
         return new Future<T1, T2, TNext>((a, b) => transform.Next(Next(a, b)), Token);
     }

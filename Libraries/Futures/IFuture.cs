@@ -27,6 +27,6 @@ public interface IFuture<T> : IDisposable, IAsyncDisposable, IEnumerable<T>, IAs
     IFuture<TNext> Pipe<TNext>(Func<T, IFuture<TNext>> next);
     IFuture<T> Pipe(ITopic<T> topic);
     IFuture<T> Pipe(ITopic<Task<T>> topic);
-    IFuture<TNext> Pipe<TNext>(IStream<T, TNext> stream);
-    IFuture<TNext> Pipe<TNext>(IStream<T, Task<TNext>> stream);
+    IFuture<TNext> Pipe<TNext>(ITransformer<T, TNext> next);
+    IFuture<TNext> Pipe<TNext>(ITransformer<T, Task<TNext>> next);
 }

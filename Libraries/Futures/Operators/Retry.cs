@@ -28,7 +28,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, TOut> Retry<T, TOut>(this IStream<T, TOut> future, int attempts = 3)
+    public static ITransformer<T, TOut> Retry<T, TOut>(this ITransformer<T, TOut> future, int attempts = 3)
     {
         return new Future<T, TOut>(value =>
         {
@@ -53,7 +53,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, TOut> Retry<T1, T2, TOut>(this IStream<T1, T2, TOut> future, int attempts = 3)
+    public static ITransformer<T1, T2, TOut> Retry<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, int attempts = 3)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {

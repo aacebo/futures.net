@@ -25,7 +25,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, TOut> Do<T, TOut>(this IStream<T, TOut> future, Action<TOut> next)
+    public static ITransformer<T, TOut> Do<T, TOut>(this ITransformer<T, TOut> future, Action<TOut> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -35,7 +35,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T, TOut> Do<T, TOut>(this IStream<T, TOut> future, Func<TOut, Task> next)
+    public static ITransformer<T, TOut> Do<T, TOut>(this ITransformer<T, TOut> future, Func<TOut, Task> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -48,7 +48,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, TOut> Do<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Action<TOut> next)
+    public static ITransformer<T1, T2, TOut> Do<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Action<TOut> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -58,7 +58,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T1, T2, TOut> Do<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<TOut, Task> next)
+    public static ITransformer<T1, T2, TOut> Do<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<TOut, Task> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {

@@ -71,7 +71,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, TOut> next)
+    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, TOut> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -86,7 +86,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, Task<TOut>> next)
+    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, Task<TOut>> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -101,7 +101,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Action<Exception, T> next)
+    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Action<Exception, T> next)
     {
         return new Future<T, TOut>(value =>
         {
@@ -117,7 +117,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T, TOut> Catch<T, TOut>(this IStream<T, TOut> future, Func<Exception, T, Task> next)
+    public static ITransformer<T, TOut> Catch<T, TOut>(this ITransformer<T, TOut> future, Func<Exception, T, Task> next)
     {
         return new Future<T, TOut>(async value =>
         {
@@ -136,7 +136,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
+    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -151,7 +151,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
+    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -166,7 +166,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Action<Exception, T1, T2> next)
+    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Action<Exception, T1, T2> next)
     {
         return new Future<T1, T2, TOut>((a, b) =>
         {
@@ -182,7 +182,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T1, T2, TOut> Catch<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
+    public static ITransformer<T1, T2, TOut> Catch<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
     {
         return new Future<T1, T2, TOut>(async (a, b) =>
         {

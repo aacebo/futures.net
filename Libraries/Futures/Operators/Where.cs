@@ -52,37 +52,37 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, IEnumerable<TOut>> Where<T, TOut>(this IStream<T, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T, IEnumerable<TOut>> Where<T, TOut>(this ITransformer<T, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, IEnumerable<TOut>> Where<T, TOut>(this IStream<T, ICollection<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T, IEnumerable<TOut>> Where<T, TOut>(this ITransformer<T, ICollection<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, IEnumerable<TOut>> Where<T, TOut>(this IStream<T, IList<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T, IEnumerable<TOut>> Where<T, TOut>(this ITransformer<T, IList<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, IEnumerable<TOut>> Where<T, TOut>(this IStream<T, List<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T, IEnumerable<TOut>> Where<T, TOut>(this ITransformer<T, List<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T, TKey, TValue>(this IStream<T, IDictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
+    public static ITransformer<T, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T, TKey, TValue>(this ITransformer<T, IDictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T, TKey, TValue>(this IStream<T, Dictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
+    public static ITransformer<T, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T, TKey, TValue>(this ITransformer<T, Dictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T, TOut> Where<T, TOut>(this IStream<T, TOut> future, Func<TOut, bool> predicate)
+    public static ITransformer<T, TOut> Where<T, TOut>(this ITransformer<T, TOut> future, Func<TOut, bool> predicate)
     {
         return new Future<T, TOut>((value, producer) =>
         {
@@ -102,37 +102,37 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this IStream<T1, T2, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this ITransformer<T1, T2, IEnumerable<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this IStream<T1, T2, ICollection<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this ITransformer<T1, T2, ICollection<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this IStream<T1, T2, IList<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this ITransformer<T1, T2, IList<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this IStream<T1, T2, List<TOut>> future, Func<TOut, bool> predicate)
+    public static ITransformer<T1, T2, IEnumerable<TOut>> Where<T1, T2, TOut>(this ITransformer<T1, T2, List<TOut>> future, Func<TOut, bool> predicate)
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T1, T2, TKey, TValue>(this IStream<T1, T2, IDictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
+    public static ITransformer<T1, T2, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T1, T2, TKey, TValue>(this ITransformer<T1, T2, IDictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T1, T2, TKey, TValue>(this IStream<T1, T2, Dictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
+    public static ITransformer<T1, T2, IEnumerable<KeyValuePair<TKey, TValue>>> Where<T1, T2, TKey, TValue>(this ITransformer<T1, T2, Dictionary<TKey, TValue>> future, Func<KeyValuePair<TKey, TValue>, bool> predicate) where TKey : notnull
     {
         return future.Map(value => value.Where(predicate));
     }
 
-    public static IStream<T1, T2, TOut> Where<T1, T2, TOut>(this IStream<T1, T2, TOut> future, Func<TOut, bool> predicate)
+    public static ITransformer<T1, T2, TOut> Where<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, Func<TOut, bool> predicate)
     {
         return new Future<T1, T2, TOut>((a, b, producer) =>
         {

@@ -2,7 +2,7 @@ namespace Futures.Operators;
 
 public static partial class FutureExtensions
 {
-    public static IStream<(TInA, TInB), (TOutA, TOutB)> Merge<TInA, TOutA, TInB, TOutB>(this IStream<TInA, TOutA> a, IStream<TInB, TOutB> b)
+    public static ITransformer<(TInA, TInB), (TOutA, TOutB)> Merge<TInA, TOutA, TInB, TOutB>(this ITransformer<TInA, TOutA> a, ITransformer<TInB, TOutB> b)
     {
         return new Future<(TInA, TInB), (TOutA, TOutB)>(value =>
         {

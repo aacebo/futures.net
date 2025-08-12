@@ -9,9 +9,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Function<TParams>
+    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Function<TParams>
     (
-        this IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
+        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,
@@ -58,9 +58,9 @@ public static partial class ChatCompletionExtensions
         }, future.Token);
     }
 
-    public static IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Function<TParams>
+    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Function<TParams>
     (
-        this IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,

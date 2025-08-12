@@ -33,7 +33,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, TOut> Debounce<T, TOut>(this IStream<T, TOut> future, TimeSpan time)
+    public static ITransformer<T, TOut> Debounce<T, TOut>(this ITransformer<T, TOut> future, TimeSpan time)
     {
         CancellationTokenSource? cancellation = new();
 
@@ -55,7 +55,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T, TOut> Debounce<T, TOut>(this IStream<T, TOut> future, int ms = 200)
+    public static ITransformer<T, TOut> Debounce<T, TOut>(this ITransformer<T, TOut> future, int ms = 200)
     {
         return Debounce(future, TimeSpan.FromMilliseconds(ms));
     }
@@ -63,7 +63,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, TOut> Debounce<T1, T2, TOut>(this IStream<T1, T2, TOut> future, TimeSpan time)
+    public static ITransformer<T1, T2, TOut> Debounce<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, TimeSpan time)
     {
         CancellationTokenSource? cancellation = new();
 
@@ -85,7 +85,7 @@ public static partial class FutureExtensions
         }, future.Token);
     }
 
-    public static IStream<T1, T2, TOut> Debounce<T1, T2, TOut>(this IStream<T1, T2, TOut> future, int ms = 200)
+    public static ITransformer<T1, T2, TOut> Debounce<T1, T2, TOut>(this ITransformer<T1, T2, TOut> future, int ms = 200)
     {
         return Debounce(future, TimeSpan.FromMilliseconds(ms));
     }

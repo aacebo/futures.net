@@ -4,7 +4,7 @@ namespace Futures.OpenAI.Chat;
 
 public static class ClientProviderExtensions
 {
-    public static IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
+    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Chat(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
     {
         return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion>((messages, options) =>
         {
@@ -12,7 +12,7 @@ public static class ClientProviderExtensions
         }, cancellation);
     }
 
-    public static IStream<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
+    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> ChatStream(this ClientProvider _, OAI.ChatClient client, CancellationToken cancellation = default)
     {
         return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>>((messages, options) =>
         {

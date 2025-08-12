@@ -11,7 +11,7 @@ public static partial class FutureExtensions
         });
     }
 
-    public static IFuture<T> Into<T, TNext>(this ITopic<T> future, IStream<T, TNext> next)
+    public static IFuture<T> Into<T, TNext>(this ITopic<T> future, ITransformer<T, TNext> next)
     {
         return future.Map(value =>
         {
@@ -23,7 +23,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T, TOut> Into<T, TOut, TNext>(this IStream<T, TOut> future, ITopic<TOut> next)
+    public static ITransformer<T, TOut> Into<T, TOut, TNext>(this ITransformer<T, TOut> future, ITopic<TOut> next)
     {
         return future.Map(value =>
         {
@@ -32,7 +32,7 @@ public static partial class FutureExtensions
         });
     }
 
-    public static IStream<T, TOut> Into<T, TOut, TNext>(this IStream<T, TOut> future, IStream<TOut, TNext> next)
+    public static ITransformer<T, TOut> Into<T, TOut, TNext>(this ITransformer<T, TOut> future, ITransformer<TOut, TNext> next)
     {
         return future.Map(value =>
         {
@@ -44,7 +44,7 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IStream<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this IStream<T1, T2, TOut> future, ITopic<TOut> next)
+    public static ITransformer<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this ITransformer<T1, T2, TOut> future, ITopic<TOut> next)
     {
         return future.Map(value =>
         {
@@ -53,7 +53,7 @@ public static partial class FutureExtensions
         });
     }
 
-    public static IStream<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this IStream<T1, T2, TOut> future, IStream<TOut, TNext> next)
+    public static ITransformer<T1, T2, TOut> Into<T1, T2, TOut, TNext>(this ITransformer<T1, T2, TOut> future, ITransformer<TOut, TNext> next)
     {
         return future.Map(value =>
         {

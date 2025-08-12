@@ -70,7 +70,7 @@ public partial class Future<T, TOut> : FutureBase<TOut>, IFuture<TOut>
         _resolve = value => resolve(value).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Future(IStream<T, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
+    public Future(ITransformer<T, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
     {
         _resolve = value =>
         {
@@ -100,7 +100,7 @@ public partial class Future<T1, T2, TOut> : FutureBase<TOut>, IFuture<TOut>
         _resolve = (a, b) => resolve(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Future(IStream<T1, T2, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
+    public Future(ITransformer<T1, T2, TOut>.Resolver resolver, CancellationToken cancellation = default) : base(cancellation)
     {
         _resolve = (a, b) =>
         {
