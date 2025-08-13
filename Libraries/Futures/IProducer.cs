@@ -8,10 +8,5 @@ namespace Futures;
 public interface IProducer<out T>
 {
     ISubscription Subscribe(IConsumer<T> consumer);
-    ISubscription Subscribe(
-        Action<T>? next = null,
-        Action? complete = null,
-        Action<Exception>? error = null,
-        Action? cancel = null
-    );
+    ISubscription Subscribe(Action<T>? next = null, Action? complete = null, Action<Exception>? error = null, Action? cancel = null);
 }

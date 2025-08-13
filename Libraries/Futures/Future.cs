@@ -62,8 +62,13 @@ public partial class Future<T> : IFuture<T>
     public ISubscription Subscribe(IConsumer<T> consumer)
     {
         var id = Guid.NewGuid();
-        var subscription = new Subscription<T>(() => UnSubscribe(id));
-        _subscribe(this, consumer);
+        var teardown = _subscribe(this, consumer);
+        var subscription = new Subscription<T>(() =>
+        {
+            UnSubscribe(id);
+            teardown();
+        });
+
         _consumers.Add((id, subscription, consumer));
         return subscription;
     }
@@ -76,20 +81,26 @@ public partial class Future<T> : IFuture<T>
     )
     {
         var id = Guid.NewGuid();
-        var subscription = new Subscription<T>(() => UnSubscribe(id));
-
-        _consumers.Add((id, subscription, new Consumer<T>()
+        var consumer = new Consumer<T>()
         {
             OnNext = next,
             OnComplete = complete,
             OnError = error,
             OnCancel = cancel
-        }));
+        };
 
+        var teardown = _subscribe(this, consumer);
+        var subscription = new Subscription<T>(() =>
+        {
+            UnSubscribe(id);
+            teardown();
+        });
+
+        _consumers.Add((id, subscription, consumer));
         return subscription;
     }
 
-    internal void UnSubscribe(Guid id)
+    private void UnSubscribe(Guid id)
     {
         var i = _consumers.FindIndex(s => s.Item1 == id);
 

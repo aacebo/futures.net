@@ -21,6 +21,7 @@ public interface IFuture<T> : IDisposable, IAsyncDisposable, IEnumerable<T>, IAs
     Task<T> AsTask();
     ValueTask<T> AsValueTask();
 
+    IFuture<T> Pipe(IOperator<T> @operator);
     IFuture<TNext> Pipe<TNext>(IOperator<T, TNext> @operator);
     IFuture<TNext> Pipe<TNext>(Func<T, TNext> next);
     IFuture<TNext> Pipe<TNext>(Func<T, Task<TNext>> next);
@@ -53,6 +54,7 @@ public interface IFuture<T, TOut> : IDisposable, IAsyncDisposable, IEnumerable<T
     Task<TOut> AsTask();
     ValueTask<TOut> AsValueTask();
 
+    IFuture<TOut> Pipe(IOperator<TOut> @operator);
     IFuture<T, TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator);
     IFuture<TNext> Pipe<TNext>(Func<TOut, TNext> next);
     IFuture<TNext> Pipe<TNext>(Func<TOut, Task<TNext>> next);

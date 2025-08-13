@@ -4,9 +4,9 @@ public partial class Future<T> : IDisposable, IAsyncDisposable
 {
     public void Dispose()
     {
-        foreach (var (id, _, _) in _consumers)
+        foreach (var (_, subscription, _) in _consumers)
         {
-            UnSubscribe(id);
+            subscription.UnSubscribe();
         }
 
         if (!IsComplete)

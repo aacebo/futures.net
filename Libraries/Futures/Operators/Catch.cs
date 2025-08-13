@@ -2,16 +2,16 @@ namespace Futures.Operators;
 
 public sealed class Catch<T> : IOperator<T>
 {
-    private readonly Func<Exception, IFuture<T>, T> _next;
+    private readonly Func<Exception, IFuture<T>, T> _selector;
 
-    public Catch(Func<Exception, IFuture<T>, T> next)
+    public Catch(Func<Exception, IFuture<T>, T> select)
     {
-        _next = next;
+        _selector = select;
     }
 
-    public Catch(Func<Exception, IFuture<T>, Task<T>> next)
+    public Catch(Func<Exception, IFuture<T>, Task<T>> select)
     {
-        _next = (err, caught) => next(err, caught).ConfigureAwait(false).GetAwaiter().GetResult();
+        _selector = (err, caught) => select(err, caught).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     public IFuture<T> Invoke(IFuture<T> source)
@@ -26,7 +26,7 @@ public sealed class Catch<T> : IOperator<T>
             {
                 OnError = err =>
                 {
-                    res = Future<T>.From(_next(err, Invoke(source)));
+                    res = Future<T>.From(_selector(err, Invoke(source)));
 
                     if (subscription is not null)
                     {
@@ -48,5 +48,18 @@ public sealed class Catch<T> : IOperator<T>
                 res?.Subscribe(destination);
             }
         }, source.Token);
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static IFuture<T> Catch<T>(this IFuture<T> future, Func<Exception, IFuture<T>, T> select)
+    {
+        return future.Pipe(new Catch<T>(select));
+    }
+
+    public static IFuture<T> Catch<T>(this IFuture<T> future, Func<Exception, IFuture<T>, Task<T>> select)
+    {
+        return future.Pipe(new Catch<T>(select));
     }
 }
