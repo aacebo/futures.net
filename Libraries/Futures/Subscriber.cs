@@ -4,41 +4,43 @@ namespace Futures;
 /// consumes/reads data from some Future
 /// </summary>
 /// <typeparam name="T">the type of data consumed</typeparam>
-public class Consumer<T> : IConsumer<T>, IDisposable
+public class Subscriber<T> : Subscription<T>, IConsumer<T>, IDisposable
 {
     public Action<T>? OnNext { get; set; }
     public Action? OnComplete { get; set; }
     public Action<Exception>? OnError { get; set; }
     public Action? OnCancel { get; set; }
 
-    public Consumer()
+    public Subscriber() : base()
     {
 
     }
 
-    public Consumer(IFuture<T> future)
+    public Subscriber(IConsumer<T> destination) : base()
     {
-        OnNext = future.Next;
-        OnComplete = future.Complete;
-        OnError = future.Error;
-        OnCancel = future.Cancel;
+        OnNext = destination.Next;
+        OnComplete = destination.Complete;
+        OnError = destination.Error;
+        OnCancel = destination.Cancel;
     }
 
-    ~Consumer()
+    ~Subscriber()
     {
         Dispose();
     }
 
-    public void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
-
     public void Next(T value)
     {
+        _count++;
+
         if (OnNext is not null)
         {
             OnNext(value);
+        }
+
+        if (_limit != null && _count >= _limit)
+        {
+            UnSubscribe();
         }
     }
 

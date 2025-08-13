@@ -3,6 +3,7 @@ namespace Futures;
 public interface ISubscription : IDisposable
 {
     public bool IsOpen { get; }
+
     public void UnSubscribe();
     public ISubscription Limit(int limit);
     public ISubscription Timeout(TimeSpan after);
@@ -12,20 +13,14 @@ public class Subscription<T> : ISubscription
 {
     public bool IsOpen { get; private set; }
 
-    private readonly Action _unsubscribe;
-    private int? _limit;
-    private int _count = 0;
+    protected int? _limit;
+    protected int _count = 0;
+    private readonly List<Action> _teardown;
 
-    internal Subscription()
+    internal Subscription(params Action[] teardown)
     {
-        _unsubscribe = () => { };
         IsOpen = true;
-    }
-
-    internal Subscription(Action unsubscribe)
-    {
-        _unsubscribe = unsubscribe;
-        IsOpen = true;
+        _teardown = [.. teardown];
     }
 
     ~Subscription()
@@ -42,9 +37,17 @@ public class Subscription<T> : ISubscription
     public void UnSubscribe()
     {
         if (!IsOpen) return;
-
-        _unsubscribe();
         IsOpen = false;
+
+        foreach (var teardown in _teardown)
+        {
+            teardown();
+        }
+    }
+
+    public void AddTearDown(Action action)
+    {
+        _teardown.Add(action);
     }
 
     public ISubscription Limit(int limit)
@@ -57,15 +60,5 @@ public class Subscription<T> : ISubscription
     {
         Task.Delay(after).ContinueWith(_ => UnSubscribe());
         return this;
-    }
-
-    internal void OnNext()
-    {
-        _count++;
-
-        if (_limit != null && _count >= _limit)
-        {
-            UnSubscribe();
-        }
     }
 }

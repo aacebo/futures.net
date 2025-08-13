@@ -10,11 +10,11 @@ public partial class Future<T> : IConsumer<T>
         }
 
         State = State.Started;
-        Value = value;
+        Last = value;
 
-        foreach (var (_, _, consumer) in _consumers)
+        foreach (var (_, subscriber) in _consumers)
         {
-            consumer.Next(value);
+            subscriber.Next(value);
         }
     }
 
@@ -33,38 +33,54 @@ public partial class Future<T> : IConsumer<T>
         State = State.Success;
         _source.TrySetResult(Value);
 
-        foreach (var (_, _, consumer) in _consumers)
+        foreach (var (_, subscriber) in _consumers)
         {
-            consumer.Complete();
+            subscriber.Complete();
         }
     }
+}
 
-    public void Error(Exception ex)
+public partial class Future<T, TOut> : IConsumer<T, TOut>
+{
+    public TOut Next(T value)
     {
         if (IsComplete)
         {
             throw new InvalidOperationException("future is already complete");
         }
 
-        State = State.Error;
-        _source.TrySetException(ex);
+        State = State.Started;
+        var output = _selector(value);
+        Last = output;
 
-        foreach (var (_, _, consumer) in _consumers)
+        foreach (var (_, subscriber) in _consumers)
         {
-            consumer.Error(ex);
+            subscriber.Next(output);
         }
+
+        return output;
     }
 
-    public void Cancel()
+    public TOut Complete()
     {
-        if (IsComplete) return;
-
-        State = State.Cancelled;
-        _source.TrySetCanceled();
-
-        foreach (var (_, _, consumer) in _consumers)
+        if (Value is null)
         {
-            consumer.Cancel();
+            throw new InvalidOperationException("attempted to complete a future with no data");
         }
+
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Success;
+        _source.TrySetResult(Value);
+
+        foreach (var (_, subscriber) in _consumers)
+        {
+            subscriber.Complete();
+        }
+
+        return Value;
     }
 }

@@ -16,18 +16,18 @@ public sealed class Map<T, TOut> : IOperator<T, TOut>
 
     public IFuture<TOut> Invoke(IFuture<T> source)
     {
-        return new Future<TOut>((destination, consumer) =>
+        return new Future<TOut>(destination =>
         {
             var i = 0;
 
-            source.Subscribe(new Consumer<T>()
+            source.Subscribe(new Subscriber<T>()
             {
                 OnNext = value => destination.Next(_selector(value, i++)),
                 OnComplete = () => destination.Complete(),
                 OnError = destination.Error,
                 OnCancel = destination.Cancel
             });
-        }, source.Token);
+        });
     }
 }
 
@@ -41,15 +41,5 @@ public static partial class FutureExtensions
     public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, int, Task<TNext>> select)
     {
         return future.Pipe(new Map<T, TNext>(select));
-    }
-
-    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, int, TNext> select)
-    {
-        return future.Pipe(new Map<TOut, TNext>(select));
-    }
-
-    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, int, Task<TNext>> select)
-    {
-        return future.Pipe(new Map<TOut, TNext>(select));
     }
 }

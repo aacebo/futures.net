@@ -16,13 +16,13 @@ public sealed class Catch<T> : IOperator<T>
 
     public IFuture<T> Invoke(IFuture<T> source)
     {
-        return new Future<T>((destination, consumer) =>
+        return new Future<T>(destination =>
         {
             var sync = false;
             ISubscription? subscription = null;
             Future<T>? res = null;
 
-            subscription = source.Subscribe(new Consumer<T>(destination)
+            subscription = source.Subscribe(new Subscriber<T>(destination)
             {
                 OnError = err =>
                 {
@@ -47,7 +47,7 @@ public sealed class Catch<T> : IOperator<T>
                 subscription = null;
                 res?.Subscribe(destination);
             }
-        }, source.Token);
+        });
     }
 }
 
