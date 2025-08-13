@@ -1,4 +1,6 @@
-﻿namespace Futures.Tests;
+﻿using Futures.Operators;
+
+namespace Futures.Tests;
 
 public class FutureTests
 {
@@ -7,7 +9,8 @@ public class FutureTests
     {
         var future = new Future<int, int>(value => value)
             .Map(value => value.ToString())
-            .Map(value => value == "1");
+            .Map(value => value == "1")
+            .CastTo<Future<int, bool>, bool>();
 
         Assert.True(future.Next(1));
         Assert.False(future.Next(2));

@@ -14,6 +14,11 @@ public sealed class Map<T, TOut> : IOperator<T, TOut>
         _selector = (value, i) => select(value, i).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
+    public Map(Func<T, int, IFuture<TOut>> select)
+    {
+        _selector = (value, i) => select(value, i).Resolve();
+    }
+
     public IFuture<TOut> Invoke(IFuture<T> source)
     {
         return new Future<TOut>(destination =>
@@ -38,8 +43,28 @@ public static partial class FutureExtensions
         return future.Pipe(new Map<T, TNext>(select));
     }
 
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, TNext> select)
+    {
+        return future.Pipe(new Map<T, TNext>((v, i) => select(v)));
+    }
+
     public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, int, Task<TNext>> select)
     {
         return future.Pipe(new Map<T, TNext>(select));
+    }
+
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, Task<TNext>> select)
+    {
+        return future.Pipe(new Map<T, TNext>((v, i) => select(v)));
+    }
+
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, int, IFuture<TNext>> select)
+    {
+        return future.Pipe(new Map<T, TNext>(select));
+    }
+
+    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, IFuture<TNext>> select)
+    {
+        return future.Pipe(new Map<T, TNext>((v, i) => select(v)));
     }
 }

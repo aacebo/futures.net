@@ -4,9 +4,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Storage
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Storage
     (
-        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
         IList<OAI.ChatMessage>? messages = null
     )
     {
@@ -23,12 +23,12 @@ public static partial class ChatCompletionExtensions
             var assistantMessage = OAI.ChatMessage.CreateAssistantMessage(completion);
             messages.Add(assistantMessage);
             return completion;
-        }, future.Token);
+        });
     }
 
-    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Storage
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Storage
     (
-        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
         IList<OAI.ChatMessage>? messages = null
     )
     {
@@ -44,13 +44,13 @@ public static partial class ChatCompletionExtensions
             var stream = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            stream.Subscribe(new Consumer<OAI.StreamingChatCompletionUpdate>()
+            stream.Subscribe(new Subscriber<OAI.StreamingChatCompletionUpdate>()
             {
                 OnNext = value => builder.Append(value),
                 OnComplete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
             });
 
             return stream;
-        }, future.Token);
+        });
     }
 }

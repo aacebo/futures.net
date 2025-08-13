@@ -67,4 +67,25 @@ public class Subscriber<T> : Subscription<T>, IConsumer<T>, IDisposable
             OnCancel();
         }
     }
+
+    public static Subscriber<T> From<TIn>(Future<T> future)
+    {
+        return new Subscriber<T>(future);
+    }
+
+    public static Subscriber<T> From<TIn>(Future<TIn, T> future)
+    {
+        return new Subscriber<T>(new Future<T>(destination =>
+        {
+            future.Subscribe(new Subscriber<T>(destination));
+        }));
+    }
+
+    public static Subscriber<T> From<T1, T2>(Future<T1, T2, T> future)
+    {
+        return new Subscriber<T>(new Future<T>(destination =>
+        {
+            future.Subscribe(new Subscriber<T>(destination));
+        }));
+    }
 }

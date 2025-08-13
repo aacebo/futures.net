@@ -1,6 +1,5 @@
 using System.Text.Json;
 
-using Futures.Extensions;
 using Futures.Operators;
 
 using OAI = OpenAI.Chat;
@@ -9,9 +8,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Function<TParams>
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Function<TParams>
     (
-        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,
@@ -55,12 +54,12 @@ public static partial class ChatCompletionExtensions
             }
 
             return completion;
-        }, future.Token);
+        });
     }
 
-    public static ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Function<TParams>
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Function<TParams>
     (
-        this ITransformer<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
         string name,
         string? description = null,
         BinaryData? parameters = null,
@@ -83,7 +82,7 @@ public static partial class ChatCompletionExtensions
             var updates = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            return updates.Pipe(update =>
+            return updates.Map(update =>
             {
                 var next = Future<OAI.StreamingChatCompletionUpdate>.From(update);
                 builder.Append(update);
@@ -93,7 +92,7 @@ public static partial class ChatCompletionExtensions
                     return next;
                 }
 
-                return next.Pipe(toolCallUpdate =>
+                return next.Map(toolCallUpdate =>
                 {
                     if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
                     {
@@ -117,6 +116,6 @@ public static partial class ChatCompletionExtensions
                     return toolCallUpdate;
                 });
             });
-        }, future.Token);
+        });
     }
 }
