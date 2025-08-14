@@ -1,186 +1,142 @@
 namespace Futures;
 
-public partial class Future<T> : Stream<T>, IFuture<T>
+public partial class Future<T, TOut>
 {
-    public T Value => Last ?? throw new NullReferenceException();
+    public Guid Id { get; } = Guid.NewGuid();
+    public State State { get; protected set; } = State.NotStarted;
+    public TOut? Last { get; protected set; }
 
-    public Future(CancellationToken cancellation = default) : base(cancellation)
+    public bool IsComplete => IsSuccess || IsError || IsCancelled;
+    public bool IsStarted => State == State.Started;
+    public bool IsSuccess => State == State.Success;
+    public bool IsError => State == State.Error;
+    public bool IsCancelled => State == State.Cancelled;
+
+    protected readonly List<(Guid, Subscriber<TOut, TOut>)> _listeners = [];
+    protected readonly List<(Guid, Subscriber<T, TOut>)> _transformers = [];
+    protected readonly TaskCompletionSource<TOut> _source;
+
+    public Future(CancellationToken cancellation = default)
     {
-
-    }
-
-    public Future(Action<IConsumer<T>> subscribe, CancellationToken cancellation = default) : base(subscribe, cancellation)
-    {
-
-    }
-
-    public Future(Func<IConsumer<T>, Action> subscribe, CancellationToken cancellation = default) : base(subscribe, cancellation)
-    {
-
-    }
-
-    public TFuture As<TFuture>() where TFuture : IFuture<T>
-    {
-        return this is TFuture future ? future : throw new InvalidCastException();
-    }
-
-    public IFuture<TNext> Pipe<TNext>(IOperator<T, TNext> @operator)
-    {
-        return @operator.Invoke(this);
-    }
-
-    public static Future<T> From(T value)
-    {
-        return new Future<T>(destination =>
+        _source = new(cancellation);
+        cancellation.Register(() =>
         {
-            destination.Next(value);
-            destination.Complete();
+            Cancel();
+            UnSubscribe();
         });
     }
 
-    public static Future<T> From(Task<T> task)
+    internal IEnumerable<TOut> Next(T value)
     {
-        return new Future<T>(async destination =>
+        if (IsComplete)
         {
-            try
-            {
-                destination.Next(await task);
-                destination.Complete();
-            }
-            catch (Exception err)
-            {
-                destination.Error(err);
-            }
-        });
-    }
+            throw new InvalidOperationException("future is already complete");
+        }
 
-    public static Future<T> From(IEnumerable<T> enumerable)
-    {
-        return new Future<T>(destination =>
+        State = State.Started;
+        List<TOut> result = [];
+
+        foreach (var (_, transformer) in _transformers)
         {
-            foreach (var item in enumerable)
+            var items = transformer.OnNext(value);
+
+            foreach (var item in items)
             {
-                destination.Next(item);
+                foreach (var (_, listener) in _listeners)
+                {
+                    listener.OnNext(item);
+                }
             }
 
-            destination.Complete();
-        });
+            result.AddRange(items);
+        }
+
+        return result;
     }
 
-    public static Future<T> From(IAsyncEnumerable<T> enumerable)
+    internal TOut? Complete()
     {
-        return new Future<T>(async destination =>
+        if (IsComplete)
         {
-            await foreach (var item in enumerable)
-            {
-                destination.Next(item);
-            }
+            throw new InvalidOperationException("future is already complete");
+        }
 
-            destination.Complete();
-        });
-    }
+        State = State.Success;
 
-    public static Future<T> From(Exception error)
-    {
-        return new Future<T>(destination => destination.Error(error));
-    }
-}
-
-public partial class Future<T, TOut> : Stream<TOut>, IFuture<T, TOut>
-{
-    public TOut Value => Last ?? throw new NullReferenceException();
-
-    private readonly Fn<T, TOut> _selector;
-
-    public Future(Func<T, TOut> select, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _selector = select;
-    }
-
-    public Future(Func<T, Task<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _selector = select;
-    }
-
-    public Future(Func<T, IFuture<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _selector = select;
-    }
-
-    public Future(Action<T, IConsumer<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _selector = new(value =>
+        if (Last is not null)
         {
-            var result = new Future<TOut>();
-            resolve(value, result);
-            return result.Resolve();
-        });
-    }
+            _source.TrySetResult(Last);
+        }
 
-    public Future(Func<T, IConsumer<TOut>, Task> resolve, CancellationToken cancellation = default) : base(cancellation)
-    {
-        _selector = new(value =>
+        foreach (var (_, subscriber) in _transformers)
         {
-            var result = new Future<TOut>();
-            resolve(value, result);
-            return result.Resolve();
-        });
+            subscriber.OnComplete();
+        }
+
+        return Last;
     }
 
-    public TFuture As<TFuture>() where TFuture : IFuture<TOut>
+    public virtual void Error(Exception ex)
     {
-        return this is TFuture future ? future : throw new InvalidCastException();
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Error;
+        _source.TrySetException(ex);
+
+        foreach (var (_, subscriber) in _transformers)
+        {
+            subscriber.OnError(ex);
+        }
     }
 
-    public IFuture<TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator)
+    public virtual void Cancel()
     {
-        return @operator.Invoke(this);
+        if (IsComplete) return;
+
+        State = State.Cancelled;
+        _source.TrySetCanceled();
+
+        foreach (var (_, subscriber) in _transformers)
+        {
+            subscriber.OnCancel();
+        }
     }
 
-    public IFuture<T, TNext> Pipe<TNext>(IOperator<T, TOut, TNext> @operator)
+    public TOut Resolve()
     {
-        return @operator.Invoke(this);
-    }
-}
-
-public partial class Future<T1, T2, TOut> : Stream<TOut>, IFuture<T1, T2, TOut>
-{
-    public TOut Value => Last ?? throw new NullReferenceException();
-
-    private readonly Fn<T1, T2, TOut> _selector;
-
-    public Future(Fn<T1, T2, TOut> select, Fn<IConsumer<TOut>, Action> subscribe, CancellationToken cancellation = default) : base(subscribe, cancellation)
-    {
-        _selector = select;
+        return _source.Task.ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Future(Func<T1, T2, TOut> select, CancellationToken cancellation = default) : base(cancellation)
+    public Task<TOut> AsTask()
     {
-        _selector = select;
+        return _source.Task;
     }
 
-    public Future(Func<T1, T2, Task<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
+    public ValueTask<TOut> AsValueTask()
     {
-        _selector = select;
+        return new ValueTask<TOut>(_source.Task);
     }
 
-    public Future(Func<T1, T2, IFuture<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
+    protected void UnSubscribe()
     {
-        _selector = select;
+        foreach (var (_, subscriber) in _transformers)
+        {
+            subscriber.UnSubscribe();
+        }
     }
 
-    public TFuture As<TFuture>() where TFuture : IFuture<TOut>
+    protected void UnSubscribe(Guid id)
     {
-        return this is TFuture future ? future : throw new InvalidCastException();
-    }
+        var i = _transformers.FindIndex(s => s.Item1 == id);
 
-    public IFuture<TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator)
-    {
-        return @operator.Invoke(this);
-    }
+        if (i == -1)
+        {
+            return;
+        }
 
-    public IFuture<T1, T2, TNext> Pipe<TNext>(IOperator<T1, T2, TOut, TNext> @operator)
-    {
-        return @operator.Invoke(this);
+        _transformers.RemoveAt(i);
     }
 }

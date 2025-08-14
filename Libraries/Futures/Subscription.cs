@@ -9,7 +9,7 @@ public interface ISubscription : IDisposable
     public ISubscription Timeout(TimeSpan after);
 }
 
-public class Subscription<T> : ISubscription
+public class Subscription : ISubscription
 {
     public bool IsOpen { get; private set; }
 
