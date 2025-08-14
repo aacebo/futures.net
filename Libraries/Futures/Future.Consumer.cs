@@ -42,7 +42,7 @@ public partial class Future<T> : IConsumer<T>
 
 public partial class Future<T, TOut> : IConsumer<T, TOut>
 {
-    public TOut Next(T value)
+    public void Next(TOut value)
     {
         if (IsComplete)
         {
@@ -50,7 +50,23 @@ public partial class Future<T, TOut> : IConsumer<T, TOut>
         }
 
         State = State.Started;
-        var output = _selector(value);
+        Last = value;
+
+        foreach (var (_, subscriber) in _consumers)
+        {
+            subscriber.Next(value);
+        }
+    }
+
+    public TOut Next(T value, Action<TOut>? result = null)
+    {
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Started;
+        var output = _selector.Invoke(value);
         Last = output;
 
         foreach (var (_, subscriber) in _consumers)
@@ -58,10 +74,32 @@ public partial class Future<T, TOut> : IConsumer<T, TOut>
             subscriber.Next(output);
         }
 
+        if (result is not null) result(output);
         return output;
     }
 
-    public TOut Complete()
+    public void Complete()
+    {
+        if (Value is null)
+        {
+            throw new InvalidOperationException("attempted to complete a future with no data");
+        }
+
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Success;
+        _source.TrySetResult(Value);
+
+        foreach (var (_, subscriber) in _consumers)
+        {
+            subscriber.Complete();
+        }
+    }
+
+    public TOut Complete(Action<TOut>? result = null)
     {
         if (Value is null)
         {
@@ -81,13 +119,14 @@ public partial class Future<T, TOut> : IConsumer<T, TOut>
             subscriber.Complete();
         }
 
+        if (result is not null) result(Value);
         return Value;
     }
 }
 
 public partial class Future<T1, T2, TOut> : IConsumer<T1, T2, TOut>
 {
-    public TOut Next(T1 a, T2 b)
+    public void Next(TOut value)
     {
         if (IsComplete)
         {
@@ -95,7 +134,23 @@ public partial class Future<T1, T2, TOut> : IConsumer<T1, T2, TOut>
         }
 
         State = State.Started;
-        var output = _selector(a, b);
+        Last = value;
+
+        foreach (var (_, subscriber) in _consumers)
+        {
+            subscriber.Next(value);
+        }
+    }
+
+    public TOut Next(T1 a, T2 b, Action<TOut>? result = null)
+    {
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Started;
+        var output = _selector.Invoke(a, b);
         Last = output;
 
         foreach (var (_, subscriber) in _consumers)
@@ -103,10 +158,32 @@ public partial class Future<T1, T2, TOut> : IConsumer<T1, T2, TOut>
             subscriber.Next(output);
         }
 
+        if (result is not null) result(output);
         return output;
     }
 
-    public TOut Complete()
+    public void Complete()
+    {
+        if (Value is null)
+        {
+            throw new InvalidOperationException("attempted to complete a future with no data");
+        }
+
+        if (IsComplete)
+        {
+            throw new InvalidOperationException("future is already complete");
+        }
+
+        State = State.Success;
+        _source.TrySetResult(Value);
+
+        foreach (var (_, subscriber) in _consumers)
+        {
+            subscriber.Complete();
+        }
+    }
+
+    public TOut Complete(Action<TOut>? result = null)
     {
         if (Value is null)
         {
@@ -126,6 +203,7 @@ public partial class Future<T1, T2, TOut> : IConsumer<T1, T2, TOut>
             subscriber.Complete();
         }
 
+        if (result is not null) result(Value);
         return Value;
     }
 }

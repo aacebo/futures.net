@@ -7,14 +7,11 @@ public class DebounceTests
     [Fact]
     public async Task Should_Debounce()
     {
-        var future = new Future<int>(value => value)
+        var future = new Future<int, int>(value => value)
             .Map(value => value + 1)
             .Debounce(200);
 
-        future.Subscribe(new Consumer<int>()
-        {
-            OnNext = value => Assert.Equal(10, value)
-        });
+        future.Subscribe(value => Assert.Equal(10, value));
 
         for (var i = 0; i < 10; i++)
         {

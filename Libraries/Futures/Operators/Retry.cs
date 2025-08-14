@@ -1,16 +1,7 @@
 namespace Futures.Operators;
 
-public sealed class Retry<T> : IOperator<T>
+public sealed class Retry<T>(int attempts = 3, int delay = 0) : IOperator<T, T>
 {
-    private readonly int _attempts;
-    private readonly int _delay;
-
-    public Retry(int attempts = 3, int delay = 0)
-    {
-        _attempts = attempts;
-        _delay = delay;
-    }
-
     public IFuture<T> Invoke(IFuture<T> source)
     {
         return new Future<T>(destination =>
@@ -45,15 +36,15 @@ public sealed class Retry<T> : IOperator<T>
                     {
                         i++;
 
-                        if (i >= _attempts)
+                        if (i >= attempts)
                         {
                             destination.Error(err);
                             return;
                         }
 
-                        if (_delay > 0)
+                        if (delay > 0)
                         {
-                            Task.Delay(_delay).Wait();
+                            Task.Delay(delay).Wait();
                         }
 
                         ReSubscribe();

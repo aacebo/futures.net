@@ -1,19 +1,7 @@
 namespace Futures.Operators;
 
-public sealed class Do<T> : IOperator<T>
+public sealed class Do<T>(Fn<T> selector) : IOperator<T, T>
 {
-    private readonly Action<T> _selector;
-
-    public Do(Action<T> select)
-    {
-        _selector = select;
-    }
-
-    public Do(Func<T, Task> select)
-    {
-        _selector = value => select(value).ConfigureAwait(false).GetAwaiter().GetResult();
-    }
-
     public IFuture<T> Invoke(IFuture<T> source)
     {
         return new Future<T>(destination =>
@@ -22,7 +10,7 @@ public sealed class Do<T> : IOperator<T>
             {
                 OnNext = value =>
                 {
-                    _selector(value);
+                    selector.Resolve(value);
                     destination.Next(value);
                 }
             });

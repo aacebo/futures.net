@@ -9,8 +9,7 @@ public class FutureTests
     {
         var future = new Future<int, int>(value => value)
             .Map(value => value.ToString())
-            .Map(value => value == "1")
-            .CastTo<Future<int, bool>, bool>();
+            .Map(value => value == "1");
 
         Assert.True(future.Next(1));
         Assert.False(future.Next(2));

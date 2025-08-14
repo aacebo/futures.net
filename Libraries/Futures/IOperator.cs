@@ -1,11 +1,16 @@
 namespace Futures;
 
-public interface IOperator<T>
+public interface IOperator<T, TNext>
 {
-    IFuture<T> Invoke(IFuture<T> source);
+    IFuture<TNext> Invoke(IFuture<T> source);
 }
 
-public interface IOperator<T, TOut>
+public interface IOperator<T, TOut, TNext>
 {
-    IFuture<TOut> Invoke(IFuture<T> source);
+    IFuture<T, TNext> Invoke(IFuture<T, TOut> source);
+}
+
+public interface IOperator<T1, T2, TOut, TNext>
+{
+    IFuture<T1, T2, TNext> Invoke(IFuture<T1, T2, TOut> source);
 }

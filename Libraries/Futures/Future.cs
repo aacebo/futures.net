@@ -19,9 +19,9 @@ public partial class Future<T> : Stream<T>, IFuture<T>
 
     }
 
-    public IFuture<T> Pipe(IOperator<T> @operator)
+    public TFuture As<TFuture>() where TFuture : IFuture<T>
     {
-        return @operator.Invoke(this);
+        return this is TFuture future ? future : throw new InvalidCastException();
     }
 
     public IFuture<TNext> Pipe<TNext>(IOperator<T, TNext> @operator)
@@ -79,13 +79,18 @@ public partial class Future<T> : Stream<T>, IFuture<T>
             destination.Complete();
         });
     }
+
+    public static Future<T> From(Exception error)
+    {
+        return new Future<T>(destination => destination.Error(error));
+    }
 }
 
-public partial class Future<T, TOut> : Stream<TOut>, IFuture<TOut>
+public partial class Future<T, TOut> : Stream<TOut>, IFuture<T, TOut>
 {
     public TOut Value => Last ?? throw new NullReferenceException();
 
-    private readonly Func<T, TOut> _selector;
+    private readonly Fn<T, TOut> _selector;
 
     public Future(Func<T, TOut> select, CancellationToken cancellation = default) : base(cancellation)
     {
@@ -94,30 +99,60 @@ public partial class Future<T, TOut> : Stream<TOut>, IFuture<TOut>
 
     public Future(Func<T, Task<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
     {
-        _selector = value => select(value).ConfigureAwait(false).GetAwaiter().GetResult();
+        _selector = select;
     }
 
     public Future(Func<T, IFuture<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
     {
-        _selector = value => select(value).Resolve();
+        _selector = select;
     }
 
-    public IFuture<TOut> Pipe(IOperator<TOut> @operator)
+    public Future(Action<T, IConsumer<TOut>> resolve, CancellationToken cancellation = default) : base(cancellation)
     {
-        return @operator.Invoke(this);
+        _selector = new(value =>
+        {
+            var result = new Future<TOut>();
+            resolve(value, result);
+            return result.Resolve();
+        });
+    }
+
+    public Future(Func<T, IConsumer<TOut>, Task> resolve, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _selector = new(value =>
+        {
+            var result = new Future<TOut>();
+            resolve(value, result);
+            return result.Resolve();
+        });
+    }
+
+    public TFuture As<TFuture>() where TFuture : IFuture<TOut>
+    {
+        return this is TFuture future ? future : throw new InvalidCastException();
     }
 
     public IFuture<TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator)
     {
         return @operator.Invoke(this);
     }
+
+    public IFuture<T, TNext> Pipe<TNext>(IOperator<T, TOut, TNext> @operator)
+    {
+        return @operator.Invoke(this);
+    }
 }
 
-public partial class Future<T1, T2, TOut> : Stream<TOut>, IFuture<TOut>
+public partial class Future<T1, T2, TOut> : Stream<TOut>, IFuture<T1, T2, TOut>
 {
     public TOut Value => Last ?? throw new NullReferenceException();
 
-    private readonly Func<T1, T2, TOut> _selector;
+    private readonly Fn<T1, T2, TOut> _selector;
+
+    public Future(Fn<T1, T2, TOut> select, Fn<IConsumer<TOut>, Action> subscribe, CancellationToken cancellation = default) : base(subscribe, cancellation)
+    {
+        _selector = select;
+    }
 
     public Future(Func<T1, T2, TOut> select, CancellationToken cancellation = default) : base(cancellation)
     {
@@ -126,20 +161,25 @@ public partial class Future<T1, T2, TOut> : Stream<TOut>, IFuture<TOut>
 
     public Future(Func<T1, T2, Task<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
     {
-        _selector = (a, b) => select(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
+        _selector = select;
     }
 
     public Future(Func<T1, T2, IFuture<TOut>> select, CancellationToken cancellation = default) : base(cancellation)
     {
-        _selector = (a, b) => select(a, b).Resolve();
+        _selector = select;
     }
 
-    public IFuture<TOut> Pipe(IOperator<TOut> @operator)
+    public TFuture As<TFuture>() where TFuture : IFuture<TOut>
+    {
+        return this is TFuture future ? future : throw new InvalidCastException();
+    }
+
+    public IFuture<TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator)
     {
         return @operator.Invoke(this);
     }
 
-    public IFuture<TNext> Pipe<TNext>(IOperator<TOut, TNext> @operator)
+    public IFuture<T1, T2, TNext> Pipe<TNext>(IOperator<T1, T2, TOut, TNext> @operator)
     {
         return @operator.Invoke(this);
     }

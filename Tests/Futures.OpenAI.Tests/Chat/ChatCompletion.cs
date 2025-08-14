@@ -2,6 +2,7 @@
 using System.ClientModel.Primitives;
 
 using Futures.OpenAI.Chat;
+using Futures.Operators;
 
 using Moq;
 

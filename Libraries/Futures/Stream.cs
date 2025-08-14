@@ -13,7 +13,7 @@ public partial class Stream<T>
 
     protected T? Last { get; set; }
     protected readonly List<(Guid, Subscriber<T>)> _consumers = [];
-    protected readonly SubscribeFn _subscribe;
+    protected SubscribeFn _subscribe;
     protected readonly TaskCompletionSource<T> _source;
 
     public Stream(CancellationToken cancellation = default)
@@ -27,12 +27,12 @@ public partial class Stream<T>
         });
     }
 
-    public Stream(Action<IConsumer<T>> subscribe, CancellationToken cancellation = default)
+    public Stream(Fn<IConsumer<T>> subscribe, CancellationToken cancellation = default)
     {
         _source = new(cancellation);
         _subscribe = (consumer) =>
         {
-            subscribe(consumer);
+            subscribe.Invoke(consumer);
             return () => { };
         };
 
@@ -43,10 +43,10 @@ public partial class Stream<T>
         });
     }
 
-    public Stream(Func<IConsumer<T>, Action> subscribe, CancellationToken cancellation = default)
+    public Stream(Fn<IConsumer<T>, Action> subscribe, CancellationToken cancellation = default)
     {
         _source = new(cancellation);
-        _subscribe = (consumer) => subscribe(consumer);
+        _subscribe = subscribe.Invoke;
         cancellation.Register(() =>
         {
             Cancel();

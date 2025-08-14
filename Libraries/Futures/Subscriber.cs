@@ -67,25 +67,64 @@ public class Subscriber<T> : Subscription<T>, IConsumer<T>, IDisposable
             OnCancel();
         }
     }
+}
 
-    public static Subscriber<T> From<TIn>(Future<T> future)
+public class Subscriber<T, TOut> : Subscription<T>, IConsumer<T, TOut>, IDisposable
+{
+    public required Func<T, TOut> OnNext { get; set; }
+    public required Func<TOut> OnComplete { get; set; }
+    public Action<Exception>? OnError { get; set; }
+    public Action? OnCancel { get; set; }
+
+    public Subscriber() : base()
     {
-        return new Subscriber<T>(future);
+
     }
 
-    public static Subscriber<T> From<TIn>(Future<TIn, T> future)
+    public Subscriber(IConsumer<T, TOut> destination) : base()
     {
-        return new Subscriber<T>(new Future<T>(destination =>
-        {
-            future.Subscribe(new Subscriber<T>(destination));
-        }));
+        OnNext = v => destination.Next(v);
+        OnComplete = () => destination.Complete();
+        OnError = destination.Error;
+        OnCancel = destination.Cancel;
     }
 
-    public static Subscriber<T> From<T1, T2>(Future<T1, T2, T> future)
+    ~Subscriber()
     {
-        return new Subscriber<T>(new Future<T>(destination =>
+        Dispose();
+    }
+
+    public TOut Next(T value, Action<TOut>? result = null)
+    {
+        _count++;
+        var @out = OnNext(value);
+
+        if (_limit != null && _count >= _limit)
         {
-            future.Subscribe(new Subscriber<T>(destination));
-        }));
+            UnSubscribe();
+        }
+
+        return @out;
+    }
+
+    public TOut Complete(Action<TOut>? result = null)
+    {
+        return OnComplete();
+    }
+
+    public void Error(Exception error)
+    {
+        if (OnError is not null)
+        {
+            OnError(error);
+        }
+    }
+
+    public void Cancel()
+    {
+        if (OnCancel is not null)
+        {
+            OnCancel();
+        }
     }
 }

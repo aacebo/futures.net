@@ -1,19 +1,12 @@
 namespace Futures.Operators;
 
-public sealed class Merge<T> : IOperator<T>
+public sealed class Merge<T>(IFuture<T> other) : IOperator<T, T>
 {
-    private readonly IFuture<T> _other;
-
-    public Merge(IFuture<T> other)
-    {
-        _other = other;
-    }
-
     public IFuture<T> Invoke(IFuture<T> source)
     {
         return new Future<T>(destination =>
         {
-            _other.Subscribe(destination);
+            other.Subscribe(destination);
             source.Subscribe(destination);
         });
     }
