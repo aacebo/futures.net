@@ -4,9 +4,9 @@ namespace Futures.OpenAI.Chat;
 
 public static partial class ChatCompletionExtensions
 {
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Storage
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> Storage
     (
-        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, OAI.ChatCompletion> future,
         IList<OAI.ChatMessage>? messages = null
     )
     {
@@ -26,15 +26,15 @@ public static partial class ChatCompletionExtensions
         });
     }
 
-    public static IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> Storage
+    public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> Storage
     (
-        this IFuture<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>> future,
+        this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> future,
         IList<OAI.ChatMessage>? messages = null
     )
     {
         messages ??= [];
 
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, IFuture<OAI.StreamingChatCompletionUpdate>>((input, options) =>
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((input, options) =>
         {
             foreach (var message in input)
             {
@@ -46,8 +46,8 @@ public static partial class ChatCompletionExtensions
 
             stream.Subscribe(new Subscriber<OAI.StreamingChatCompletionUpdate>()
             {
-                OnNext = value => builder.Append(value),
-                OnComplete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
+                Next = value => builder.Append(value),
+                Complete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
             });
 
             return stream;

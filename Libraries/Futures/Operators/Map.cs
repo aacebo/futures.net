@@ -1,69 +1,75 @@
 namespace Futures.Operators;
 
-public sealed class Map<T, TNext>(Fn<T, TNext> selector) : IOperator<T, TNext>
+public sealed class Map<T, TNext>(Fn<T, TNext> selector) : ITransformer<T, TNext>
 {
-    public IFuture<TNext> Invoke(IFuture<T> source)
+    public Future<T, TNext> Invoke(Future<T> src)
     {
-        return new Future<TNext>(destination =>
+        return new Future<T, TNext>((value, dest) =>
         {
-            source.Subscribe(new Subscriber<T>()
-            {
-                OnNext = value => destination.Next(selector.Resolve(value)),
-                OnComplete = () => destination.Complete(),
-                OnError = destination.Error,
-                OnCancel = destination.Cancel
-            });
+            var @out = selector.Invoke(src.Next(value));
+            dest.Next(@out);
+            dest.Complete();
         });
     }
 }
 
-public sealed class Map<T, TOut, TNext>(Fn<TOut, TNext> selector) : IOperator<T, TOut, TNext>
+public sealed class Map<T, TOut, TNext>(Fn<TOut, TNext> selector) : ITransformer<T, TOut, TNext>
 {
-    public IFuture<T, TNext> Invoke(IFuture<T, TOut> source)
+    public Future<T, TNext> Invoke(Future<T, TOut> src)
     {
-        return new Future<T, TNext>(value => selector.Resolve(source.Next(value)));
+        return new Future<T, TNext>((value, dest) =>
+        {
+            var @out = selector.Invoke(src.Next(value));
+            dest.Next(@out);
+            dest.Complete();
+        });
     }
 }
 
-public sealed class Map<T1, T2, TOut, TNext>(Fn<TOut, TNext> selector) : IOperator<T1, T2, TOut, TNext>
+public sealed class Map<T1, T2, TOut, TNext>(Fn<TOut, TNext> selector) : ITransformer<T1, T2, TOut, TNext>
 {
-    public IFuture<T1, T2, TNext> Invoke(IFuture<T1, T2, TOut> source)
+    public Future<T1, T2, TNext> Invoke(Future<T1, T2, TOut> src)
     {
-        return new Future<T1, T2, TNext>((a, b) => selector.Resolve(source.Next(a, b)));
-    }
-}
-
-public static partial class FutureExtensions
-{
-    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, TNext> select)
-    {
-        return future.Pipe(new Map<T, TNext>(select));
-    }
-
-    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, Task<TNext>> select)
-    {
-        return future.Pipe(new Map<T, TNext>(select));
-    }
-
-    public static IFuture<TNext> Map<T, TNext>(this IFuture<T> future, Func<T, IFuture<TNext>> select)
-    {
-        return future.Pipe(new Map<T, TNext>(select));
+        return new Future<T1, T2, TNext>((a, b, dest) =>
+        {
+            var @out = selector.Invoke(src.Next(a, b));
+            dest.Next(@out);
+            dest.Complete();
+        });
     }
 }
 
 public static partial class FutureExtensions
 {
-    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, TNext> select)
+    public static Future<T, TNext> Map<T, TNext>(this Future<T> future, Func<T, TNext> select)
+    {
+        return future.Pipe(new Map<T, TNext>(select));
+    }
+
+    public static Future<T, TNext> Map<T, TNext>(this Future<T> future, Func<T, Task<TNext>> select)
+    {
+        return future.Pipe(new Map<T, TNext>(select));
+    }
+
+    public static Future<T, TNext> Map<T, TNext>(this Future<T> future, Func<T, Future<TNext>> select)
+    {
+        return future.Pipe(new Map<T, TNext>(select));
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static Future<T, TNext> Map<T, TOut, TNext>(this Future<T, TOut> future, Func<TOut, TNext> select)
     {
         return future.Pipe(new Map<T, TOut, TNext>(select));
     }
 
-    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, Task<TNext>> select)
+    public static Future<T, TNext> Map<T, TOut, TNext>(this Future<T, TOut> future, Func<TOut, Task<TNext>> select)
     {
         return future.Pipe(new Map<T, TOut, TNext>(select));
     }
 
-    public static IFuture<T, TNext> Map<T, TOut, TNext>(this IFuture<T, TOut> future, Func<TOut, IFuture<TNext>> select)
+    public static Future<T, TNext> Map<T, TOut, TNext>(this Future<T, TOut> future, Func<TOut, Future<TNext>> select)
     {
         return future.Pipe(new Map<T, TOut, TNext>(select));
     }
@@ -71,17 +77,17 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IFuture<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this IFuture<T1, T2, TOut> future, Func<TOut, TNext> select)
+    public static Future<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this Future<T1, T2, TOut> future, Func<TOut, TNext> select)
     {
         return future.Pipe(new Map<T1, T2, TOut, TNext>(select));
     }
 
-    public static IFuture<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this IFuture<T1, T2, TOut> future, Func<TOut, Task<TNext>> select)
+    public static Future<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this Future<T1, T2, TOut> future, Func<TOut, Task<TNext>> select)
     {
         return future.Pipe(new Map<T1, T2, TOut, TNext>(select));
     }
 
-    public static IFuture<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this IFuture<T1, T2, TOut> future, Func<TOut, IFuture<TNext>> select)
+    public static Future<T1, T2, TNext> Map<T1, T2, TOut, TNext>(this Future<T1, T2, TOut> future, Func<TOut, Future<TNext>> select)
     {
         return future.Pipe(new Map<T1, T2, TOut, TNext>(select));
     }

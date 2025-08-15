@@ -1,71 +1,106 @@
 namespace Futures.Operators;
 
-public sealed class Retry<T>(int attempts = 3, int delay = 0) : IOperator<T, T>
+public sealed class Retry<T>(int attempts = 3, int delay = 0) : IOperator<T>
 {
-    public IFuture<T> Invoke(IFuture<T> source)
+    public Future<T> Invoke(Future<T> src)
     {
-        return new Future<T>(destination =>
+        return new Future<T>((value, dest) =>
         {
-            var i = 0;
-            ISubscription? subscription = null;
+            List<Exception> errors = [];
 
-            void Retry()
+            for (var i = 0; i < attempts; i++)
             {
-                var sync = false;
-                void ReSubscribe()
+                try
                 {
-                    if (subscription is null)
-                    {
-                        sync = true;
-                        return;
-                    }
-
-                    subscription.UnSubscribe();
-                    subscription = null;
-                    Retry();
+                    dest.Next(src.Next(value));
+                    dest.Complete();
+                    return;
+                }
+                catch (Exception error)
+                {
+                    errors.Add(error);
                 }
 
-                subscription = source.Subscribe(new Subscriber<T>(destination)
-                {
-                    OnNext = value =>
-                    {
-                        i = 0;
-                        destination.Next(value);
-                    },
-                    OnError = err =>
-                    {
-                        i++;
-
-                        if (i >= attempts)
-                        {
-                            destination.Error(err);
-                            return;
-                        }
-
-                        if (delay > 0)
-                        {
-                            Task.Delay(delay).Wait();
-                        }
-
-                        ReSubscribe();
-                    }
-                });
-
-                if (sync)
-                {
-                    ReSubscribe();
-                }
+                Task.Delay(delay).Wait();
             }
 
-            Retry();
+            dest.Error(new AggregateException(errors));
+        });
+    }
+}
+
+public sealed class Retry<T, TOut>(int attempts = 3, int delay = 0) : IOperator<T, TOut>
+{
+    public Future<T, TOut> Invoke(Future<T, TOut> src)
+    {
+        return new Future<T, TOut>((value, dest) =>
+        {
+            List<Exception> errors = [];
+
+            for (var i = 0; i < attempts; i++)
+            {
+                try
+                {
+                    dest.Next(src.Next(value));
+                    dest.Complete();
+                    return;
+                }
+                catch (Exception error)
+                {
+                    errors.Add(error);
+                }
+
+                Task.Delay(delay).Wait();
+            }
+
+            dest.Error(new AggregateException(errors));
+        });
+    }
+}
+
+public sealed class Retry<T1, T2, TOut>(int attempts = 3, int delay = 0) : IOperator<T1, T2, TOut>
+{
+    public Future<T1, T2, TOut> Invoke(Future<T1, T2, TOut> src)
+    {
+        return new Future<T1, T2, TOut>((a, b, dest) =>
+        {
+            List<Exception> errors = [];
+
+            for (var i = 0; i < attempts; i++)
+            {
+                try
+                {
+                    dest.Next(src.Next(a, b));
+                    dest.Complete();
+                    return;
+                }
+                catch (Exception error)
+                {
+                    errors.Add(error);
+                }
+
+                Task.Delay(delay).Wait();
+            }
+
+            dest.Error(new AggregateException(errors));
         });
     }
 }
 
 public static partial class FutureExtensions
 {
-    public static IFuture<T> Retry<T>(this IFuture<T> future, int attempts = 3, int delay = 0)
+    public static Future<T> Retry<T>(this Future<T> future, int attempts = 3, int delay = 0)
     {
         return future.Pipe(new Retry<T>(attempts, delay));
+    }
+
+    public static Future<T, TOut> Retry<T, TOut>(this Future<T, TOut> future, int attempts = 3, int delay = 0)
+    {
+        return future.Pipe(new Retry<T, TOut>(attempts, delay));
+    }
+
+    public static Future<T1, T2, TOut> Retry<T1, T2, TOut>(this Future<T1, T2, TOut> future, int attempts = 3, int delay = 0)
+    {
+        return future.Pipe(new Retry<T1, T2, TOut>(attempts, delay));
     }
 }

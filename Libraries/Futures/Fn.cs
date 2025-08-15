@@ -21,6 +21,9 @@ public class Fn<T>
 
     public static implicit operator Fn<T>(Action<T> fn) => new(fn);
     public static implicit operator Fn<T>(Func<T, Task> fn) => new(fn);
+
+    public static implicit operator Action<T>(Fn<T> fn) => fn.Invoke;
+    public static implicit operator Func<T, Task>(Fn<T> fn) => v => Task.Run(() => fn.Invoke(v));
 }
 
 /// <summary>
@@ -54,6 +57,10 @@ public class Fn<T, TOut>
     public static implicit operator Fn<T, TOut>(Func<T, TOut> fn) => new(fn);
     public static implicit operator Fn<T, TOut>(Func<T, Task<TOut>> fn) => new(fn);
     public static implicit operator Fn<T, TOut>(Func<T, Future<TOut>> fn) => new(fn);
+
+    public static implicit operator Func<T, TOut>(Fn<T, TOut> fn) => fn.Invoke;
+    public static implicit operator Func<T, Task<TOut>>(Fn<T, TOut> fn) => v => Task.FromResult(fn.Invoke(v));
+    public static implicit operator Func<T, Future<TOut>>(Fn<T, TOut> fn) => v => Future<TOut>.From(fn.Invoke(v));
 }
 
 public class Fn<T1, T2, TOut>
@@ -70,9 +77,9 @@ public class Fn<T1, T2, TOut>
         _action = (a, b) => select(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Fn(Func<T1, T2, Future<TOut>> select)
+    public Fn(Func<T1, T2, Future<TOut>> stream)
     {
-        _action = (a, b) => select(a, b).Resolve();
+        _action = (a, b) => stream(a, b).Resolve();
     }
 
     public TOut Invoke(T1 a, T2 b)
@@ -83,4 +90,41 @@ public class Fn<T1, T2, TOut>
     public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, TOut> fn) => new(fn);
     public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, Task<TOut>> fn) => new(fn);
     public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, Future<TOut>> fn) => new(fn);
+
+    public static implicit operator Func<T1, T2, TOut>(Fn<T1, T2, TOut> fn) => fn.Invoke;
+    public static implicit operator Func<T1, T2, Task<TOut>>(Fn<T1, T2, TOut> fn) => (a, b) => Task.FromResult(fn.Invoke(a, b));
+    public static implicit operator Func<T1, T2, Future<TOut>>(Fn<T1, T2, TOut> fn) => (a, b) => Future<TOut>.From(fn.Invoke(a, b));
+}
+
+public class Fn<T1, T2, T3, TOut>
+{
+    private readonly Func<T1, T2, T3, TOut> _action;
+
+    public Fn(Func<T1, T2, T3, TOut> select)
+    {
+        _action = select;
+    }
+
+    public Fn(Func<T1, T2, T3, Task<TOut>> select)
+    {
+        _action = (a, b, c) => select(a, b, c).ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public Fn(Func<T1, T2, T3, Future<TOut>> stream)
+    {
+        _action = (a, b, c) => stream(a, b, c).Resolve();
+    }
+
+    public TOut Invoke(T1 a, T2 b, T3 c)
+    {
+        return _action(a, b, c);
+    }
+
+    public static implicit operator Fn<T1, T2, T3, TOut>(Func<T1, T2, T3, TOut> fn) => new(fn);
+    public static implicit operator Fn<T1, T2, T3, TOut>(Func<T1, T2, T3, Task<TOut>> fn) => new(fn);
+    public static implicit operator Fn<T1, T2, T3, TOut>(Func<T1, T2, T3, Future<TOut>> fn) => new(fn);
+
+    public static implicit operator Func<T1, T2, T3, TOut>(Fn<T1, T2, T3, TOut> fn) => fn.Invoke;
+    public static implicit operator Func<T1, T2, T3, Task<TOut>>(Fn<T1, T2, T3, TOut> fn) => (a, b, c) => Task.FromResult(fn.Invoke(a, b, c));
+    public static implicit operator Func<T1, T2, T3, Future<TOut>>(Fn<T1, T2, T3, TOut> fn) => (a, b, c) => Future<TOut>.From(fn.Invoke(a, b, c));
 }

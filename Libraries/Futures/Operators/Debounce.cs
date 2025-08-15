@@ -1,65 +1,62 @@
 namespace Futures.Operators;
 
-public sealed class Debounce<T>(TimeSpan time) : IOperator<T, T>
+public sealed class Debounce<T>(TimeSpan time) : IOperator<T>
 {
-    public IFuture<T> Invoke(IFuture<T> source)
+    public Future<T> Invoke(Future<T> src)
     {
-        return new Future<T>(destination =>
-        {
-            T? prev = default;
-            CancellationTokenSource cancellation = new();
-
-            source.Subscribe(new Subscriber<T>(destination)
-            {
-                OnNext = value =>
-                {
-                    prev = value;
-                    cancellation.Cancel();
-                    cancellation = new();
-
-                    _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
-                    {
-                        if (task.IsCanceled) return;
-                        var v = prev;
-                        prev = default;
-                        destination.Next(v);
-                    });
-                },
-                OnComplete = () =>
-                {
-                    if (prev is not null)
-                    {
-                        destination.Next(prev);
-                    }
-
-                    destination.Complete();
-                    prev = default;
-                }
-            });
-        });
-    }
-}
-
-public sealed class Debounce<T, TOut>(TimeSpan time) : IOperator<T, TOut, TOut>
-{
-    public IFuture<T, TOut> Invoke(IFuture<T, TOut> source)
-    {
-
-        TOut? prev = default;
         CancellationTokenSource cancellation = new();
 
-        return new Future<T, TOut>((value, destination) =>
+        return new Future<T>((value, destination) =>
         {
-            prev = source.Next(value);
             cancellation.Cancel();
             cancellation = new();
 
             _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
             {
                 if (task.IsCanceled) return;
-                var v = prev;
-                prev = default;
-                destination.Next(v);
+                destination.Next(src.Next(value));
+                destination.Complete();
+            });
+        });
+    }
+}
+
+public sealed class Debounce<T, TOut>(TimeSpan time) : IOperator<T, TOut>
+{
+    public Future<T, TOut> Invoke(Future<T, TOut> src)
+    {
+        CancellationTokenSource cancellation = new();
+
+        return new Future<T, TOut>((value, destination) =>
+        {
+            cancellation.Cancel();
+            cancellation = new();
+
+            _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
+            {
+                if (task.IsCanceled) return;
+                destination.Next(src.Next(value));
+                destination.Complete();
+            });
+        });
+    }
+}
+
+public sealed class Debounce<T1, T2, TOut>(TimeSpan time) : IOperator<T1, T2, TOut>
+{
+    public Future<T1, T2, TOut> Invoke(Future<T1, T2, TOut> src)
+    {
+        CancellationTokenSource cancellation = new();
+
+        return new Future<T1, T2, TOut>((a, b, destination) =>
+        {
+            cancellation.Cancel();
+            cancellation = new();
+
+            _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
+            {
+                if (task.IsCanceled) return;
+                destination.Next(src.Next(a, b));
                 destination.Complete();
             });
         });
@@ -68,12 +65,12 @@ public sealed class Debounce<T, TOut>(TimeSpan time) : IOperator<T, TOut, TOut>
 
 public static partial class FutureExtensions
 {
-    public static IFuture<T> Debounce<T>(this IFuture<T> future, TimeSpan time)
+    public static Future<T> Debounce<T>(this Future<T> future, TimeSpan time)
     {
         return future.Pipe(new Debounce<T>(time));
     }
 
-    public static IFuture<T> Debounce<T>(this IFuture<T> future, int ms)
+    public static Future<T> Debounce<T>(this Future<T> future, int ms)
     {
         return future.Pipe(new Debounce<T>(TimeSpan.FromMilliseconds(ms)));
     }
@@ -81,13 +78,26 @@ public static partial class FutureExtensions
 
 public static partial class FutureExtensions
 {
-    public static IFuture<T, TOut> Debounce<T, TOut>(this IFuture<T, TOut> future, TimeSpan time)
+    public static Future<T, TOut> Debounce<T, TOut>(this Future<T, TOut> future, TimeSpan time)
     {
         return future.Pipe(new Debounce<T, TOut>(time));
     }
 
-    public static IFuture<T, TOut> Debounce<T, TOut>(this IFuture<T, TOut> future, int ms)
+    public static Future<T, TOut> Debounce<T, TOut>(this Future<T, TOut> future, int ms)
     {
         return future.Pipe(new Debounce<T, TOut>(TimeSpan.FromMilliseconds(ms)));
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static Future<T1, T2, TOut> Debounce<T1, T2, TOut>(this Future<T1, T2, TOut> future, TimeSpan time)
+    {
+        return future.Pipe(new Debounce<T1, T2, TOut>(time));
+    }
+
+    public static Future<T1, T2, TOut> Debounce<T1, T2, TOut>(this Future<T1, T2, TOut> future, int ms)
+    {
+        return future.Pipe(new Debounce<T1, T2, TOut>(TimeSpan.FromMilliseconds(ms)));
     }
 }

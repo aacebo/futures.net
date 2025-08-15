@@ -1,5 +1,9 @@
 namespace Futures;
 
+/// <summary>
+/// a stream of data that acts as
+/// an emitter (send and forget)
+/// </summary>
 public partial class Stream<T>
 {
     public State State { get; protected set; } = State.NotStarted;
@@ -10,11 +14,13 @@ public partial class Stream<T>
     public bool IsError => State == State.Error;
     public bool IsCancelled => State == State.Cancelled;
 
+    internal CancellationToken Token { get; }
     protected Exception? Err { get; set; }
     protected List<Subscriber<T>> Consumers { get; } = [];
 
     public Stream(CancellationToken cancellation = default)
     {
+        Token = cancellation;
         cancellation.Register(() =>
         {
             Cancel();
@@ -22,7 +28,15 @@ public partial class Stream<T>
         });
     }
 
-    public void Emit(T value)
+    public Stream(Stream<T> stream)
+    {
+        State = stream.State;
+        Err = stream.Err;
+        Token = stream.Token;
+        Consumers = Consumers;
+    }
+
+    protected void Emit(T value)
     {
         if (IsComplete)
         {
@@ -37,7 +51,7 @@ public partial class Stream<T>
         }
     }
 
-    public void Complete()
+    public virtual void Success()
     {
         if (IsComplete)
         {
@@ -52,7 +66,7 @@ public partial class Stream<T>
         }
     }
 
-    public void Error(Exception error)
+    public virtual void Error(Exception error)
     {
         if (IsComplete)
         {
@@ -68,7 +82,7 @@ public partial class Stream<T>
         }
     }
 
-    public void Cancel()
+    public virtual void Cancel()
     {
         if (IsComplete) return;
 

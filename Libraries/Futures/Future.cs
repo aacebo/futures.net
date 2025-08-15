@@ -1,299 +1,430 @@
 namespace Futures;
 
-public partial class Future<T>
+/// <summary>
+/// a stream of data that returns
+/// its latest output
+/// </summary>
+public partial class Future<T> : Stream<T>
 {
-    public Guid Id { get; } = Guid.NewGuid();
-    public State State { get; protected set; } = State.NotStarted;
-    public T? Last { get; protected set; }
+    public T? Value => Last;
 
-    public bool IsComplete => IsSuccess || IsError || IsCancelled;
-    public bool IsStarted => State == State.Started;
-    public bool IsSuccess => State == State.Success;
-    public bool IsError => State == State.Error;
-    public bool IsCancelled => State == State.Cancelled;
+    protected T? Last { get; set; }
+    protected Fn<T, T> Transform { get; set; } = new(v => v);
 
-    protected readonly List<(Guid, Subscriber<T, T>)> _subscribers = [];
-    protected readonly TaskCompletionSource<T> _source;
+    private readonly TaskCompletionSource<T> _task;
 
-    public Future(CancellationToken cancellation = default)
+    public Future(CancellationToken cancellation = default) : base(cancellation)
     {
-        _source = new(cancellation);
-        cancellation.Register(() =>
+        _task = new(cancellation);
+    }
+
+    public Future(Stream<T> stream) : base(stream)
+    {
+        _task = new(stream.Token);
+    }
+
+    public Future(Action<T, Future<T>> transform, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _task = new(cancellation);
+        Transform = new(value =>
         {
-            Cancel();
-            UnSubscribe();
+            var @out = new Future<T>();
+            transform(value, @out);
+            return @out.Resolve();
         });
     }
 
-    public Future(Action<Future<T>> init, CancellationToken cancellation = default)
+    public Future(Func<T, Future<T>, Task> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        _source = new(cancellation);
-        cancellation.Register(() =>
+        _task = new(cancellation);
+        Transform = new(value =>
         {
-            Cancel();
-            UnSubscribe();
+            var @out = new Future<T>();
+            transform(value, @out);
+            return @out.Resolve();
         });
-
-        init(this);
     }
 
-    internal IEnumerable<T> Next(T value)
+    public Future(Func<T, T> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Started;
-        List<T> result = [];
-
-        foreach (var (_, transformer) in _subscribers)
-        {
-            var items = transformer.OnNext(value);
-            result.AddRange(items);
-        }
-
-        return result;
+        _task = new(cancellation);
+        Transform = transform;
     }
 
-    internal T? Complete()
+    public Future(Func<T, Task<T>> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Success;
-
-        if (Last is not null)
-        {
-            _source.TrySetResult(Last);
-        }
-
-        foreach (var (_, subscriber) in _subscribers)
-        {
-            subscriber.OnComplete();
-        }
-
-        return Last;
+        _task = new(cancellation);
+        Transform = transform;
     }
 
-    public virtual void Error(Exception ex)
+    public T Next(T value)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Error;
-        _source.TrySetException(ex);
-
-        foreach (var (_, subscriber) in _subscribers)
-        {
-            subscriber.OnError(ex);
-        }
+        value = Transform.Invoke(value);
+        Emit(value);
+        Last = value;
+        return value;
     }
 
-    public virtual void Cancel()
+    public T Complete()
     {
-        if (IsComplete) return;
-
-        State = State.Cancelled;
-        _source.TrySetCanceled();
-
-        foreach (var (_, subscriber) in _subscribers)
+        if (Value is null)
         {
-            subscriber.OnCancel();
+            throw new InvalidOperationException("attempt to call Future<T>.Complete() on empty future");
         }
+
+        Success();
+        _task.TrySetResult(Value);
+        return Value;
+    }
+
+    public override void Error(Exception error)
+    {
+        base.Error(error);
+        _task.TrySetException(error);
+    }
+
+    public override void Cancel()
+    {
+        base.Cancel();
+        _task.TrySetCanceled();
     }
 
     public T Resolve()
     {
-        return _source.Task.ConfigureAwait(false).GetAwaiter().GetResult();
+        return _task.Task.ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     public Task<T> AsTask()
     {
-        return _source.Task;
+        return _task.Task;
     }
 
     public ValueTask<T> AsValueTask()
     {
-        return new ValueTask<T>(_source.Task);
+        return new ValueTask<T>(_task.Task);
     }
 
-    protected void UnSubscribe()
+    public Future<T> Pipe(IOperator<T> @operator)
     {
-        foreach (var (_, subscriber) in _subscribers)
-        {
-            subscriber.UnSubscribe();
-        }
+        return @operator.Invoke(this);
     }
 
-    protected void UnSubscribe(Guid id)
+    public Future<T, TNext> Pipe<TNext>(ITransformer<T, TNext> @operator)
     {
-        var i = _subscribers.FindIndex(s => s.Item1 == id);
+        return @operator.Invoke(this);
+    }
 
-        if (i == -1)
+    public override ISubscription Subscribe(Future<T> future)
+    {
+        return base.Subscribe(future);
+    }
+
+    public override ISubscription Subscribe<TNext>(Future<T, TNext> future)
+    {
+        return base.Subscribe(future);
+    }
+
+    public static Future<T> From(T value)
+    {
+        var future = new Future<T>();
+        future.Next(value);
+        future.Complete();
+        return future;
+    }
+
+    public static Future<T> From(Exception error)
+    {
+        var future = new Future<T>();
+        future.Error(error);
+        return future;
+    }
+
+    public static Future<T> From(Stream<T> stream)
+    {
+        return new(stream);
+    }
+
+    public static Future<T> From(IEnumerable<T> enumerable)
+    {
+        return Create(future =>
         {
-            return;
-        }
+            foreach (var item in enumerable)
+            {
+                future.Next(item);
+            }
 
-        _subscribers.RemoveAt(i);
+            future.Complete();
+        });
+    }
+
+    public static Future<T> From(IAsyncEnumerable<T> enumerable)
+    {
+        return Create(async future =>
+        {
+            await foreach (var item in enumerable)
+            {
+                future.Next(item);
+            }
+
+            future.Complete();
+        });
+    }
+
+    public static Future<T> Create(Action<Future<T>> onInit, CancellationToken cancellation = default)
+    {
+        var future = new Future<T>(cancellation);
+        onInit(future);
+        return future;
+    }
+
+    public static Future<T> Create(Func<Future<T>, Task> onInit, CancellationToken cancellation = default)
+    {
+        var future = new Future<T>(cancellation);
+        onInit(future);
+        return future;
     }
 }
 
-public partial class Future<T, TOut>
+/// <summary>
+/// a stream of data that returns
+/// its latest output
+/// </summary>
+public partial class Future<T, TOut> : Stream<TOut>
 {
-    public Guid Id { get; } = Guid.NewGuid();
-    public State State { get; protected set; } = State.NotStarted;
-    public TOut? Last { get; protected set; }
+    public TOut? Value => Last;
 
-    public bool IsComplete => IsSuccess || IsError || IsCancelled;
-    public bool IsStarted => State == State.Started;
-    public bool IsSuccess => State == State.Success;
-    public bool IsError => State == State.Error;
-    public bool IsCancelled => State == State.Cancelled;
+    protected TOut? Last { get; set; }
+    protected Fn<T, TOut> Transform { get; set; }
 
-    protected readonly List<(Guid, Subscriber<TOut, TOut>)> _listeners = [];
-    protected readonly List<(Guid, Subscriber<T, TOut>)> _transformers = [];
-    protected readonly TaskCompletionSource<TOut> _source;
+    private readonly TaskCompletionSource<TOut> _task;
 
-    public Future(CancellationToken cancellation = default)
+    public Future(Action<T, Future<TOut>> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        _source = new(cancellation);
-        cancellation.Register(() =>
+        _task = new(cancellation);
+        Transform = new(value =>
         {
-            Cancel();
-            UnSubscribe();
+            var @out = new Future<TOut>();
+            transform(value, @out);
+            return @out.Resolve();
         });
     }
 
-    public Future(Action<Future<T, TOut>> init, CancellationToken cancellation = default)
+    public Future(Func<T, Future<TOut>, Task> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        _source = new(cancellation);
-        cancellation.Register(() =>
+        _task = new(cancellation);
+        Transform = new(value =>
         {
-            Cancel();
-            UnSubscribe();
+            var @out = new Future<TOut>();
+            transform(value, @out);
+            return @out.Resolve();
         });
-
-        init(this);
     }
 
-    internal IEnumerable<TOut> Next(T value)
+    public Future(Func<T, TOut> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Started;
-        List<TOut> result = [];
-
-        foreach (var (_, transformer) in _transformers)
-        {
-            var items = transformer.OnNext(value);
-
-            foreach (var item in items)
-            {
-                foreach (var (_, listener) in _listeners)
-                {
-                    listener.OnNext(item);
-                }
-            }
-
-            result.AddRange(items);
-        }
-
-        return result;
+        _task = new(cancellation);
+        Transform = transform;
     }
 
-    internal TOut? Complete()
+    public Future(Func<T, Task<TOut>> transform, CancellationToken cancellation = default) : base(cancellation)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Success;
-
-        if (Last is not null)
-        {
-            _source.TrySetResult(Last);
-        }
-
-        foreach (var (_, subscriber) in _transformers)
-        {
-            subscriber.OnComplete();
-        }
-
-        return Last;
+        _task = new(cancellation);
+        Transform = transform;
     }
 
-    public virtual void Error(Exception ex)
+    public TOut Next(T value)
     {
-        if (IsComplete)
-        {
-            throw new InvalidOperationException("future is already complete");
-        }
-
-        State = State.Error;
-        _source.TrySetException(ex);
-
-        foreach (var (_, subscriber) in _transformers)
-        {
-            subscriber.OnError(ex);
-        }
+        var @out = Transform.Invoke(value);
+        Emit(@out);
+        Last = @out;
+        return @out;
     }
 
-    public virtual void Cancel()
+    public TOut Complete()
     {
-        if (IsComplete) return;
-
-        State = State.Cancelled;
-        _source.TrySetCanceled();
-
-        foreach (var (_, subscriber) in _transformers)
+        if (Value is null)
         {
-            subscriber.OnCancel();
+            throw new InvalidOperationException("attempt to call Future<T, TOut>.Complete() on empty future");
         }
+
+        Success();
+        _task.TrySetResult(Value);
+        return Value;
+    }
+
+    public override void Error(Exception error)
+    {
+        base.Error(error);
+        _task.TrySetException(error);
+    }
+
+    public override void Cancel()
+    {
+        base.Cancel();
+        _task.TrySetCanceled();
     }
 
     public TOut Resolve()
     {
-        return _source.Task.ConfigureAwait(false).GetAwaiter().GetResult();
+        return _task.Task.ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     public Task<TOut> AsTask()
     {
-        return _source.Task;
+        return _task.Task;
     }
 
     public ValueTask<TOut> AsValueTask()
     {
-        return new ValueTask<TOut>(_source.Task);
+        return new ValueTask<TOut>(_task.Task);
     }
 
-    protected void UnSubscribe()
+    public Future<TOut> AsFuture()
     {
-        foreach (var (_, subscriber) in _transformers)
-        {
-            subscriber.UnSubscribe();
-        }
+        var future = new Future<TOut>(Token);
+        Subscribe(future);
+        return future;
     }
 
-    protected void UnSubscribe(Guid id)
+    public Future<T, TOut> Pipe(IOperator<T, TOut> @operator)
     {
-        var i = _transformers.FindIndex(s => s.Item1 == id);
+        return @operator.Invoke(this);
+    }
 
-        if (i == -1)
+    public Future<T, TNext> Pipe<TNext>(ITransformer<T, TOut, TNext> @operator)
+    {
+        return @operator.Invoke(this);
+    }
+
+    public override ISubscription Subscribe(Future<TOut> future)
+    {
+        return base.Subscribe(future);
+    }
+
+    public override ISubscription Subscribe<TNext>(Future<TOut, TNext> future)
+    {
+        return base.Subscribe(future);
+    }
+}
+
+/// <summary>
+/// a stream of data that returns
+/// its latest output
+/// </summary>
+public partial class Future<T1, T2, TOut> : Stream<TOut>
+{
+    public TOut? Value => Last;
+
+    protected TOut? Last { get; set; }
+    protected Fn<T1, T2, TOut> Transform { get; set; }
+
+    private readonly TaskCompletionSource<TOut> _task;
+
+    public Future(Action<T1, T2, Future<TOut>> transform, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _task = new(cancellation);
+        Transform = new((a, b) =>
         {
-            i = _listeners.FindIndex(s => s.Item1 == id);
+            var @out = new Future<TOut>();
+            transform(a, b, @out);
+            return @out.Resolve();
+        });
+    }
 
-            if (i == -1) return;
+    public Future(Func<T1, T2, Future<TOut>, Task> transform, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _task = new(cancellation);
+        Transform = new((a, b) =>
+        {
+            var @out = new Future<TOut>();
+            transform(a, b, @out);
+            return @out.Resolve();
+        });
+    }
+
+    public Future(Func<T1, T2, TOut> transform, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _task = new(cancellation);
+        Transform = transform;
+    }
+
+    public Future(Func<T1, T2, Task<TOut>> transform, CancellationToken cancellation = default) : base(cancellation)
+    {
+        _task = new(cancellation);
+        Transform = transform;
+    }
+
+    public TOut Next(T1 a, T2 b)
+    {
+        var @out = Transform.Invoke(a, b);
+        Emit(@out);
+        Last = @out;
+        return @out;
+    }
+
+    public TOut Complete()
+    {
+        if (Value is null)
+        {
+            throw new InvalidOperationException("attempt to call Future<T1, T2, TOut>.Complete() on empty future");
         }
 
-        _transformers.RemoveAt(i);
+        Success();
+        _task.TrySetResult(Value);
+        return Value;
+    }
+
+    public override void Error(Exception error)
+    {
+        base.Error(error);
+        _task.TrySetException(error);
+    }
+
+    public override void Cancel()
+    {
+        base.Cancel();
+        _task.TrySetCanceled();
+    }
+
+    public TOut Resolve()
+    {
+        return _task.Task.ConfigureAwait(false).GetAwaiter().GetResult();
+    }
+
+    public Task<TOut> AsTask()
+    {
+        return _task.Task;
+    }
+
+    public ValueTask<TOut> AsValueTask()
+    {
+        return new ValueTask<TOut>(_task.Task);
+    }
+
+    public Future<TOut> AsFuture()
+    {
+        var future = new Future<TOut>(Token);
+        Subscribe(future);
+        return future;
+    }
+
+    public Future<T1, T2, TOut> Pipe(IOperator<T1, T2, TOut> @operator)
+    {
+        return @operator.Invoke(this);
+    }
+
+    public Future<T1, T2, TNext> Pipe<TNext>(ITransformer<T1, T2, TOut, TNext> @operator)
+    {
+        return @operator.Invoke(this);
+    }
+
+    public override ISubscription Subscribe(Future<TOut> future)
+    {
+        return base.Subscribe(future);
+    }
+
+    public override ISubscription Subscribe<TNext>(Future<TOut, TNext> future)
+    {
+        return base.Subscribe(future);
     }
 }
