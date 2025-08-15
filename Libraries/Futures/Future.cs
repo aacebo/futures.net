@@ -104,6 +104,13 @@ public partial class Future<T> : Stream<T>
         return new ValueTask<T>(_task.Task);
     }
 
+    public Future<T> Fork()
+    {
+        var future = new Future<T>(Token);
+        Subscribe(future);
+        return future;
+    }
+
     public Future<T> Pipe(IOperator<T> @operator)
     {
         return @operator.Invoke(this);
@@ -279,7 +286,7 @@ public partial class Future<T, TOut> : Stream<TOut>
         return new ValueTask<TOut>(_task.Task);
     }
 
-    public Future<TOut> AsFuture()
+    public Future<TOut> Fork()
     {
         var future = new Future<TOut>(Token);
         Subscribe(future);
@@ -401,7 +408,7 @@ public partial class Future<T1, T2, TOut> : Stream<TOut>
         return new ValueTask<TOut>(_task.Task);
     }
 
-    public Future<TOut> AsFuture()
+    public Future<TOut> Fork()
     {
         var future = new Future<TOut>(Token);
         Subscribe(future);
