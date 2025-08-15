@@ -146,7 +146,7 @@ public partial class Future<T> : Stream<T>
 
     public static Future<T> From(IEnumerable<T> enumerable)
     {
-        return Create(future =>
+        return Run(future =>
         {
             foreach (var item in enumerable)
             {
@@ -159,7 +159,7 @@ public partial class Future<T> : Stream<T>
 
     public static Future<T> From(IAsyncEnumerable<T> enumerable)
     {
-        return Create(async future =>
+        return Run(async future =>
         {
             await foreach (var item in enumerable)
             {
@@ -170,14 +170,14 @@ public partial class Future<T> : Stream<T>
         });
     }
 
-    public static Future<T> Create(Action<Future<T>> onInit, CancellationToken cancellation = default)
+    public static Future<T> Run(Action<Future<T>> onInit, CancellationToken cancellation = default)
     {
         var future = new Future<T>(cancellation);
         onInit(future);
         return future;
     }
 
-    public static Future<T> Create(Func<Future<T>, Task> onInit, CancellationToken cancellation = default)
+    public static Future<T> Run(Func<Future<T>, Task> onInit, CancellationToken cancellation = default)
     {
         var future = new Future<T>(cancellation);
         onInit(future);
