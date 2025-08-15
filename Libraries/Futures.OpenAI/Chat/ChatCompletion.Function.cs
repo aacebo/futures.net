@@ -92,29 +92,26 @@ public static partial class ChatCompletionExtensions
                     return next;
                 }
 
-                return next.Map(toolCallUpdate =>
+                if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
                 {
-                    if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
+                    var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
+
+                    while (message.ToolCalls.Any())
                     {
-                        var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
+                        messages = messages.Append(message);
 
-                        while (message.ToolCalls.Any())
+                        foreach (var call in message.ToolCalls)
                         {
-                            messages = messages.Append(message);
-
-                            foreach (var call in message.ToolCalls)
-                            {
-                                var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
-                                var res = handler(@params);
-                                messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
-                            }
-
-                            var updates = future.Next(messages, options);
+                            var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
+                            var res = handler(@params);
+                            messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
                         }
-                    }
 
-                    return toolCallUpdate;
-                }).AsFuture();
+                        var updates = future.Next(messages, options);
+                    }
+                }
+
+                return next;
             }).AsFuture();
         });
     }

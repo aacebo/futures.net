@@ -180,7 +180,7 @@ public partial class Future<T> : Stream<T>
     public static Future<T> Run(Func<Future<T>, Task> onInit, CancellationToken cancellation = default)
     {
         var future = new Future<T>(cancellation);
-        onInit(future);
+        onInit(future).ConfigureAwait(false);
         return future;
     }
 }
@@ -215,7 +215,7 @@ public partial class Future<T, TOut> : Stream<TOut>
         Transform = new(value =>
         {
             var @out = new Future<TOut>();
-            transform(value, @out);
+            transform(value, @out).ConfigureAwait(false);
             return @out.Resolve();
         });
     }
@@ -337,7 +337,7 @@ public partial class Future<T1, T2, TOut> : Stream<TOut>
         Transform = new((a, b) =>
         {
             var @out = new Future<TOut>();
-            transform(a, b, @out);
+            transform(a, b, @out).ConfigureAwait(false);
             return @out.Resolve();
         });
     }
