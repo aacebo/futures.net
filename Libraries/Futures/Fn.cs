@@ -41,7 +41,7 @@ public class Fn<T, TOut>
         _action = v => select(v).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Fn(Func<T, IFuture<TOut>> select)
+    public Fn(Func<T, Future<TOut>> select)
     {
         _action = v => select(v).Resolve();
     }
@@ -53,7 +53,7 @@ public class Fn<T, TOut>
 
     public static implicit operator Fn<T, TOut>(Func<T, TOut> fn) => new(fn);
     public static implicit operator Fn<T, TOut>(Func<T, Task<TOut>> fn) => new(fn);
-    public static implicit operator Fn<T, TOut>(Func<T, IFuture<TOut>> fn) => new(fn);
+    public static implicit operator Fn<T, TOut>(Func<T, Future<TOut>> fn) => new(fn);
 }
 
 public class Fn<T1, T2, TOut>
@@ -70,7 +70,7 @@ public class Fn<T1, T2, TOut>
         _action = (a, b) => select(a, b).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
-    public Fn(Func<T1, T2, IFuture<TOut>> select)
+    public Fn(Func<T1, T2, Future<TOut>> select)
     {
         _action = (a, b) => select(a, b).Resolve();
     }
@@ -82,5 +82,5 @@ public class Fn<T1, T2, TOut>
 
     public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, TOut> fn) => new(fn);
     public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, Task<TOut>> fn) => new(fn);
-    public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, IFuture<TOut>> fn) => new(fn);
+    public static implicit operator Fn<T1, T2, TOut>(Func<T1, T2, Future<TOut>> fn) => new(fn);
 }

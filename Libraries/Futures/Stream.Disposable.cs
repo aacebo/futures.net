@@ -1,15 +1,10 @@
 namespace Futures;
 
-public partial class Future<T, TOut> : IDisposable, IAsyncDisposable
+public partial class Stream<T> : IDisposable, IAsyncDisposable
 {
     public virtual void Dispose()
     {
-        foreach (var (_, subscriber) in _transformers)
-        {
-            subscriber.UnSubscribe();
-        }
-
-        foreach (var (_, subscriber) in _listeners)
+        foreach (var subscriber in Consumers)
         {
             subscriber.UnSubscribe();
         }

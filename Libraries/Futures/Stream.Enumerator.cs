@@ -2,26 +2,22 @@ using System.Collections;
 
 namespace Futures;
 
-internal partial class Enumerator<T, TOut> : IEnumerator<TOut>, IAsyncEnumerator<TOut>
+internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 {
-    public TOut Current => _values.Dequeue();
+    public T Current => _values.Dequeue();
     object IEnumerator.Current => Current!;
 
     protected bool _complete = false;
-    protected Queue<TOut> _values;
+    protected Queue<T> _values;
     protected ISubscription _subscription;
 
-    public Enumerator(IProducer<T, TOut> producer)
+    public Enumerator(IProducer<T> producer)
     {
         _values = [];
         _complete = false;
-        _subscription = producer.Subscribe(new Subscriber<TOut, TOut>()
+        _subscription = producer.Subscribe(new Subscriber<T>()
         {
-            Next = v =>
-            {
-                _values.Enqueue(v);
-                return [];
-            },
+            Next = v => _values.Enqueue(v),
             Complete = () => _complete = true,
             Error = (_) => _complete = true,
             Cancel = () => _complete = true

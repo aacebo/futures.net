@@ -1,47 +1,8 @@
 namespace Futures.Operators;
 
-public sealed class Catch<T>(Fn<Exception, IFuture<T>, T> selector) : IOperator<T, T>
+public sealed class Catch<T, TOut>(Fn<Exception, Future<T, TOut>, T> selector) : IOperator<T, TOut>
 {
-    public IFuture<T> Invoke(IFuture<T> source)
-    {
-        return new Future<T>(destination =>
-        {
-            var sync = false;
-            ISubscription? subscription = null;
-            Future<T>? res = null;
-
-            subscription = source.Subscribe(new Subscriber<T>(destination)
-            {
-                OnError = err =>
-                {
-                    res = Future<T>.From(selector.Resolve(err, Invoke(source)));
-
-                    if (subscription is not null)
-                    {
-                        subscription.UnSubscribe();
-                        subscription = null;
-                        res.Subscribe(destination);
-                    }
-                    else
-                    {
-                        sync = true;
-                    }
-                }
-            });
-
-            if (sync)
-            {
-                subscription.UnSubscribe();
-                subscription = null;
-                res?.Subscribe(destination);
-            }
-        });
-    }
-}
-
-public sealed class Catch<T, TOut>(Fn<Exception, IFuture<T>, T> selector) : IOperator<T, TOut>
-{
-    public IFuture<T, TOut> Invoke(IFuture<T, TOut> source)
+    public Future<T, TOut> Invoke(Future<T, TOut> source)
     {
         return new Future<T, TOut>(destination =>
         {
@@ -49,9 +10,9 @@ public sealed class Catch<T, TOut>(Fn<Exception, IFuture<T>, T> selector) : IOpe
             ISubscription? subscription = null;
             Future<T>? res = null;
 
-            subscription = source.Subscribe(new Subscriber<T>(destination)
+            subscription = source.Subscribe(new Subscriber<T, TOut>(destination)
             {
-                OnError = err =>
+                Error = err =>
                 {
                     res = Future<T>.From(selector.Resolve(err, Invoke(source)));
 
