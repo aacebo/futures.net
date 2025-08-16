@@ -34,7 +34,7 @@ public partial class Stream<T>
         State = stream.State;
         Err = stream.Err;
         Token = stream.Token;
-        Consumers = Consumers;
+        Consumers = stream.Consumers;
     }
 
     protected void Emit(object sender, T value)
