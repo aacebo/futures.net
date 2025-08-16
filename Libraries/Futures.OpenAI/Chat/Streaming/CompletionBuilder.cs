@@ -58,4 +58,16 @@ public class CompletionBuilder
             toolCalls: ToolCalls.Build()
         );
     }
+
+    public static CompletionBuilder From(IEnumerable<StreamingChatCompletionUpdate> updates)
+    {
+        var builder = new CompletionBuilder();
+
+        foreach (var update in updates)
+        {
+            builder = builder.Append(update);
+        }
+
+        return builder;
+    }
 }

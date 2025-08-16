@@ -8,7 +8,7 @@ public class MergeTests
     public void Should_Merge()
     {
         var a = new Future<string>();
-        var b = new Future<int>().Map(v => v.ToString()).AsFuture();
+        var b = new Future<int>().Map(v => v.ToString()).Fork();
         var merged = a.Merge(b);
         var input = new Future<int>()
             .Do(value => merged.Next(value.ToString()));

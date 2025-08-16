@@ -29,11 +29,24 @@ public partial class Stream<T> : IProducer<T>
         return Subscribe(Subscriber<T>.From(future));
     }
 
-    public ISubscription Subscribe(Action<T>? next = null, Action? complete = null, Action<Exception>? error = null, Action? cancel = null)
+    public ISubscription Subscribe(Action<object, T>? next = null, Action? complete = null, Action<Exception>? error = null, Action? cancel = null)
     {
         var subscriber = new Subscriber<T>()
         {
             Next = next,
+            Complete = complete,
+            Error = error,
+            Cancel = cancel
+        };
+
+        return Subscribe(subscriber);
+    }
+
+    public ISubscription Subscribe(Func<object, T, Task>? next = null, Action? complete = null, Action<Exception>? error = null, Action? cancel = null)
+    {
+        var subscriber = new Subscriber<T>()
+        {
+            Next = next is null ? null : (sender, value) => next(sender, value).ConfigureAwait(false),
             Complete = complete,
             Error = error,
             Cancel = cancel

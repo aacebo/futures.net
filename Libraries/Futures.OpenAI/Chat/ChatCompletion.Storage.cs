@@ -46,7 +46,7 @@ public static partial class ChatCompletionExtensions
 
             stream.Subscribe(new Subscriber<OAI.StreamingChatCompletionUpdate>()
             {
-                Next = value => builder.Append(value),
+                Next = (_, value) => builder.Append(value),
                 Complete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
             });
 

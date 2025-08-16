@@ -1,13 +1,13 @@
 namespace Futures;
 
-public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable
+public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable<Stream<T>>
 {
-    public Action<T>? Next { get; set; }
+    public Action<object, T>? Next { get; set; }
     public Action? Complete { get; set; }
     public Action<Exception>? Error { get; set; }
     public Action? Cancel { get; set; }
 
-    internal Guid Id { get; } = Guid.NewGuid();
+    internal Guid Id { get; set; } = Guid.NewGuid();
 
     public Subscriber() : base()
     {
@@ -24,7 +24,8 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable
 
     public Subscriber(Future<T> future) : base()
     {
-        Next = v => future.Next(v);
+        Id = future.Id;
+        Next = (sender, value) => future.Next(sender, value);
     }
 
     ~Subscriber()
@@ -32,7 +33,7 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable
         Dispose();
     }
 
-    public void OnNext(T value)
+    public void OnNext(object sender, T value)
     {
         _count++;
 
@@ -43,7 +44,7 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable
 
         if (Next is not null)
         {
-            Next(value);
+            Next(sender, value);
         }
     }
 
@@ -71,14 +72,30 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable
         }
     }
 
+    public bool Equals(Stream<T>? other)
+    {
+        return Id == other?.Id;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Stream<T>);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
+
     public static Subscriber<T> From<TOut>(Future<T, TOut> future)
     {
         return new()
         {
-            Next = v => future.Next(v),
-            Complete = () => future.Complete(),
-            Error = future.Error,
-            Cancel = future.Cancel,
+            Id = future.Id,
+            Next = (sender, value) => future.Next(sender, value),
         };
     }
+
+    public static bool operator ==(Subscriber<T> left, Stream<T> right) => left.Equals(right);
+    public static bool operator !=(Subscriber<T> left, Stream<T> right) => !left.Equals(right);
 }

@@ -6,6 +6,7 @@ namespace Futures;
 /// </summary>
 public partial class Stream<T>
 {
+    public Guid Id { get; } = Guid.NewGuid();
     public State State { get; protected set; } = State.NotStarted;
 
     public bool IsComplete => IsSuccess || IsError || IsCancelled;
@@ -36,7 +37,7 @@ public partial class Stream<T>
         Consumers = Consumers;
     }
 
-    protected void Emit(T value)
+    protected void Emit(object sender, T value)
     {
         if (IsComplete)
         {
@@ -47,7 +48,8 @@ public partial class Stream<T>
 
         foreach (var subscriber in Consumers)
         {
-            subscriber.OnNext(value);
+            if (subscriber == sender) continue;
+            subscriber.OnNext(sender, value);
         }
     }
 

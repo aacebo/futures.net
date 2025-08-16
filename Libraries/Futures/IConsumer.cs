@@ -6,7 +6,7 @@ namespace Futures;
 /// <typeparam name="T">the type of data consumed</typeparam>
 public interface IConsumer<T>
 {
-    void OnNext(T value);
+    void OnNext(object sender, T value);
     void OnComplete();
     void OnError(Exception ex);
     void OnCancel();

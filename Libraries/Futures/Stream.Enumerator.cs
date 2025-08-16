@@ -17,7 +17,7 @@ internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
         _complete = false;
         _subscription = producer.Subscribe(new Subscriber<T>()
         {
-            Next = v => _values.Enqueue(v),
+            Next = (_, value) => _values.Enqueue(value),
             Complete = () => _complete = true,
             Error = (_) => _complete = true,
             Cancel = () => _complete = true

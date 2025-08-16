@@ -11,7 +11,7 @@ public class DebounceTests
             .Map(value => value + 1)
             .Debounce(200);
 
-        future.Subscribe(value => Assert.Equal(10, value));
+        future.Subscribe((_, value) => Assert.Equal(10, value));
 
         for (var i = 0; i < 10; i++)
         {

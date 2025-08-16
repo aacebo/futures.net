@@ -1,6 +1,6 @@
 namespace Futures.Operators;
 
-public static partial class Futures
+public static partial class Future
 {
     public static Future<T> Merge<T>(Future<T> a, Future<T> b)
     {
@@ -37,7 +37,7 @@ public sealed class Merge<T>(Future<T> other) : IOperator<T>
 {
     public Future<T> Invoke(Future<T> src)
     {
-        return Futures.Merge(src, other);
+        return Future.Merge(src, other);
     }
 }
 
@@ -45,7 +45,7 @@ public sealed class Merge<T, TOut>(Future<T, TOut> other) : IOperator<T, TOut>
 {
     public Future<T, TOut> Invoke(Future<T, TOut> src)
     {
-        return Futures.Merge(src, other);
+        return Future.Merge(src, other);
     }
 }
 
@@ -53,7 +53,7 @@ public sealed class Merge<T1, T2, TOut>(Future<T1, T2, TOut> other) : IOperator<
 {
     public Future<T1, T2, TOut> Invoke(Future<T1, T2, TOut> src)
     {
-        return Futures.Merge(src, other);
+        return Future.Merge(src, other);
     }
 }
 

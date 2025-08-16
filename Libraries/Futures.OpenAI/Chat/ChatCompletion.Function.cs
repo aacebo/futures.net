@@ -74,7 +74,7 @@ public static partial class ChatCompletionExtensions
             strict
         );
 
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, options) =>
+        Future<OAI.StreamingChatCompletionUpdate> Send(IEnumerable<OAI.ChatMessage> messages, OAI.ChatCompletionOptions? options)
         {
             options ??= new();
             options.Tools.Add(tool);
@@ -82,9 +82,10 @@ public static partial class ChatCompletionExtensions
             var updates = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            return updates.Map(update =>
+            return updates.MergeMap(update =>
             {
                 var next = Future<OAI.StreamingChatCompletionUpdate>.From(update);
+                Console.WriteLine($"stream update: {update.CompletionId}");
                 builder.Append(update);
 
                 if (handler is null || !update.ToolCallUpdates.Any())
@@ -102,17 +103,23 @@ public static partial class ChatCompletionExtensions
 
                         foreach (var call in message.ToolCalls)
                         {
+                            Console.WriteLine($"tool call: {call.Id}");
                             var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
                             var res = handler(@params);
                             messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
                         }
 
-                        var updates = future.Next(messages, options);
+                        var updates = Send(messages, options);
+                        message = OAI.ChatMessage.CreateAssistantMessage(Streaming.CompletionBuilder.From(updates).Build());
                     }
+
+                    return Send(messages, options);
                 }
 
                 return next;
-            }).AsFuture();
-        });
+            }).Fork();
+        }
+
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>(Send);
     }
 }
