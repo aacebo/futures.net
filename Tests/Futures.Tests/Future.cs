@@ -1,13 +1,15 @@
-﻿namespace Futures.Tests;
+﻿using Futures.Operators;
+
+namespace Futures.Tests;
 
 public class FutureTests
 {
     [Fact]
-    public void Should_Pipe()
+    public void Should_Map()
     {
         var future = new Future<int, int>(value => value)
-            .Pipe(value => value.ToString())
-            .Pipe(value => value == "1");
+            .Map(value => value.ToString())
+            .Map(value => value == "1");
 
         Assert.True(future.Next(1));
         Assert.False(future.Next(2));

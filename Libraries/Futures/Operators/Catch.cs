@@ -1,196 +1,100 @@
 namespace Futures.Operators;
 
-public static partial class FutureExtensions
+public sealed class Catch<T>(Fn<Exception, T, Future<T>, T> selector) : IOperator<T>
 {
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, T> next)
+    public Future<T> Invoke(Future<T> src)
     {
-        return new Future<T>(value =>
+        return new Future<T>((value, dest) =>
         {
             try
             {
-                return future.Next(value);
+                dest.Next(src.Select(value));
             }
-            catch (Exception ex)
+            catch (Exception error)
             {
-                return next(ex, value);
+                dest.Next(selector.Invoke(error, value, Invoke(src)));
             }
-        }, future.Token);
-    }
 
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task<T>> next)
-    {
-        return new Future<T>(value =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(value));
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
+            dest.Complete();
+        });
     }
+}
 
-    public static Future<T> Catch<T>(this Future<T> future, Action<Exception, T> next)
+public sealed class Catch<T, TOut>(Fn<Exception, T, Future<T, TOut>, TOut> selector) : IOperator<T, TOut>
+{
+    public Future<T, TOut> Invoke(Future<T, TOut> src)
     {
-        return new Future<T>(value =>
+        return new Future<T, TOut>((value, dest) =>
         {
             try
             {
-                return Task.FromResult(future.Next(value));
+                dest.Next(src.Select(value));
             }
-            catch (Exception ex)
+            catch (Exception error)
             {
-                next(ex, value);
-                return Task.FromResult(value);
+                dest.Next(selector.Invoke(error, value, Invoke(src)));
             }
-        }, future.Token);
+
+            dest.Complete();
+        });
     }
+}
 
-    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Task> next)
+public sealed class Catch<T1, T2, TOut>(Fn<Exception, (T1, T2), Future<T1, T2, TOut>, TOut> selector) : IOperator<T1, T2, TOut>
+{
+    public Future<T1, T2, TOut> Invoke(Future<T1, T2, TOut> src)
     {
-        return new Future<T>(async value =>
+        return new Future<T1, T2, TOut>((a, b, dest) =>
         {
             try
             {
-                return future.Next(value);
+                dest.Next(src.Select(a, b));
             }
-            catch (Exception ex)
+            catch (Exception error)
             {
-                await next(ex, value);
-                return value;
+                dest.Next(selector.Invoke(error, (a, b), Invoke(src)));
             }
-        }, future.Token);
+
+            dest.Complete();
+        });
     }
 }
 
 public static partial class FutureExtensions
 {
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, TOut> next)
+    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Future<T>, T> select)
     {
-        return new Future<T, TOut>(value =>
-        {
-            try
-            {
-                return future.Next(value);
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
+        return future.Pipe(new Catch<T>(select));
     }
 
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task<TOut>> next)
+    public static Future<T> Catch<T>(this Future<T> future, Func<Exception, T, Future<T>, Task<T>> select)
     {
-        return new Future<T, TOut>(value =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(value));
-            }
-            catch (Exception ex)
-            {
-                return next(ex, value);
-            }
-        }, future.Token);
-    }
-
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Action<Exception, T> next)
-    {
-        return new Future<T, TOut>(value =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(value));
-            }
-            catch (Exception ex)
-            {
-                next(ex, value);
-                return Task.FromResult(future.Value);
-            }
-        }, future.Token);
-    }
-
-    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Task> next)
-    {
-        return new Future<T, TOut>(async value =>
-        {
-            try
-            {
-                return future.Next(value);
-            }
-            catch (Exception ex)
-            {
-                await next(ex, value);
-                return future.Value;
-            }
-        }, future.Token);
+        return future.Pipe(new Catch<T>(select));
     }
 }
 
 public static partial class FutureExtensions
 {
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, TOut> next)
+    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Future<T, TOut>, TOut> select)
     {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return future.Next(a, b);
-            }
-            catch (Exception ex)
-            {
-                return next(ex, a, b);
-            }
-        }, future.Token);
+        return future.Pipe(new Catch<T, TOut>(select));
     }
 
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task<TOut>> next)
+    public static Future<T, TOut> Catch<T, TOut>(this Future<T, TOut> future, Func<Exception, T, Future<T, TOut>, Task<TOut>> select)
     {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(a, b));
-            }
-            catch (Exception ex)
-            {
-                return next(ex, a, b);
-            }
-        }, future.Token);
+        return future.Pipe(new Catch<T, TOut>(select));
+    }
+}
+
+public static partial class FutureExtensions
+{
+    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, (T1, T2), Future<T1, T2, TOut>, TOut> select)
+    {
+        return future.Pipe(new Catch<T1, T2, TOut>(select));
     }
 
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Action<Exception, T1, T2> next)
+    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, (T1, T2), Future<T1, T2, TOut>, Task<TOut>> select)
     {
-        return new Future<T1, T2, TOut>((a, b) =>
-        {
-            try
-            {
-                return Task.FromResult(future.Next(a, b));
-            }
-            catch (Exception ex)
-            {
-                next(ex, a, b);
-                return Task.FromResult(future.Value);
-            }
-        }, future.Token);
-    }
-
-    public static Future<T1, T2, TOut> Catch<T1, T2, TOut>(this Future<T1, T2, TOut> future, Func<Exception, T1, T2, Task> next)
-    {
-        return new Future<T1, T2, TOut>(async (a, b) =>
-        {
-            try
-            {
-                return future.Next(a, b);
-            }
-            catch (Exception ex)
-            {
-                await next(ex, a, b);
-                return future.Value;
-            }
-        }, future.Token);
+        return future.Pipe(new Catch<T1, T2, TOut>(select));
     }
 }

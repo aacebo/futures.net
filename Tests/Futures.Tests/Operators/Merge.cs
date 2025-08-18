@@ -7,20 +7,18 @@ public class MergeTests
     [Fact]
     public void Should_Merge()
     {
-        var a = new Future<string>().AsProducer();
-        var b = new Future<int>().AsProducer();
+        var a = new Future<string>();
+        var b = new Future<int>().Map(v => v.ToString()).Fork();
         var merged = a.Merge(b);
         var input = new Future<int>()
-            .AsProducer()
-            .Do(value => merged.Next((value.ToString(), value)));
+            .Do(value => merged.Next(value.ToString()));
 
         for (var i = 0; i < 10; i++)
         {
             input.Next(i);
         }
 
-        Assert.Equal(("9", 9), merged.Complete());
-        Assert.Equal("9", a.Complete());
-        Assert.Equal(9, b.Complete());
+        Assert.Equal("9", merged.Complete());
+        Assert.Equal(9, input.Complete());
     }
 }

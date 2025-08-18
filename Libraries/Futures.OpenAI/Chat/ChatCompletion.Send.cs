@@ -11,7 +11,7 @@ public static partial class ChatCompletionExtensions
 
     public static Task<TOut> SendAsync<TOut>(this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future, params OAI.ChatMessage[] messages)
     {
-        return future.NextAsync(messages, null);
+        return Task.Run(() => Send(future, messages));
     }
 
     public static TOut Send<TOut>(this Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut> future, params string[] messages)

@@ -1,6 +1,5 @@
 using System.Text.Json;
 
-using Futures.Extensions;
 using Futures.Operators;
 
 using OAI = OpenAI.Chat;
@@ -55,7 +54,7 @@ public static partial class ChatCompletionExtensions
             }
 
             return completion;
-        }, future.Token);
+        });
     }
 
     public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> Function<TParams>
@@ -75,7 +74,7 @@ public static partial class ChatCompletionExtensions
             strict
         );
 
-        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>((messages, options) =>
+        Future<OAI.StreamingChatCompletionUpdate> Send(IEnumerable<OAI.ChatMessage> messages, OAI.ChatCompletionOptions? options)
         {
             options ??= new();
             options.Tools.Add(tool);
@@ -83,9 +82,10 @@ public static partial class ChatCompletionExtensions
             var updates = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            return updates.Pipe(update =>
+            return updates.MergeMap(update =>
             {
-                var next = Future<OAI.StreamingChatCompletionUpdate>.From(update);
+                var next = Future.FromValue(update);
+                Console.WriteLine($"stream update: {update.CompletionId}");
                 builder.Append(update);
 
                 if (handler is null || !update.ToolCallUpdates.Any())
@@ -93,30 +93,33 @@ public static partial class ChatCompletionExtensions
                     return next;
                 }
 
-                return next.Pipe(toolCallUpdate =>
+                if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
                 {
-                    if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
+                    var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
+                    messages = messages.Append(message);
+
+                    while (message.ToolCalls.Any())
                     {
-                        var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
-
-                        while (message.ToolCalls.Any())
+                        foreach (var call in message.ToolCalls)
                         {
-                            messages = messages.Append(message);
-
-                            foreach (var call in message.ToolCalls)
-                            {
-                                var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
-                                var res = handler(@params);
-                                messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
-                            }
-
-                            var updates = future.Next(messages, options);
+                            Console.WriteLine($"tool call: {call.Id}");
+                            var @params = JsonSerializer.Deserialize<TParams>(call.FunctionArguments) ?? throw new ArgumentException("could not deserialize params");
+                            var res = handler(@params);
+                            messages = messages.Append(OAI.ChatMessage.CreateToolMessage(call.Id, res));
                         }
+
+                        var updates = Send(messages, options);
+                        message = OAI.ChatMessage.CreateAssistantMessage(Streaming.CompletionBuilder.From(updates).Build());
+                        messages = messages.Append(message);
                     }
 
-                    return toolCallUpdate;
-                });
-            });
-        }, future.Token);
+                    return Send(messages, options);
+                }
+
+                return next;
+            }).Fork();
+        }
+
+        return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>>(Send);
     }
 }

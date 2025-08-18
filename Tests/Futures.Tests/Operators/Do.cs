@@ -8,7 +8,7 @@ public class DoTests
     public void Should_Call()
     {
         var future = new Future<int>()
-            .Pipe(value => value + 200)
+            .Map(value => value + 200)
             .Do(value => Assert.Equal(200, value));
 
         Assert.Equal(200, future.Next(0));

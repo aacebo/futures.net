@@ -2,6 +2,7 @@
 using System.ClientModel.Primitives;
 
 using Futures.OpenAI.Chat;
+using Futures.Operators;
 
 using Moq;
 
@@ -36,7 +37,7 @@ public class ChatCompletionTests
     {
         var completion = Providers.From
             .Chat(_client.Object)
-            .Pipe(res => res.Content.FirstOrDefault()?.Text);
+            .Map(res => res.Content.FirstOrDefault()?.Text);
 
         Assert.Equal("hi!", completion.Send("hi"));
         completion.Complete();
@@ -49,7 +50,7 @@ public class ChatCompletionTests
         var chat = Providers.From
             .Chat(_client.Object)
             .Storage(messages)
-            .Pipe(completion => (OAI.ChatMessage.CreateAssistantMessage(completion), completion));
+            .Map(completion => (OAI.ChatMessage.CreateAssistantMessage(completion), completion));
 
         var (message, completion) = chat.Send("hi");
         Assert.Equal(2, messages.Count());

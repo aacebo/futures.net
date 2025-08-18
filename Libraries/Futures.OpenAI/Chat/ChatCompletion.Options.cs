@@ -13,6 +13,6 @@ public static partial class ChatCompletionExtensions
         return new Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, TOut>((messages, o) =>
         {
             return future.Next(messages, o ?? options);
-        }, future.Token);
+        });
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Futures;
 using Futures.OpenAI.Chat;
+using Futures.Operators;
 
 using OpenAI;
 
@@ -22,8 +23,8 @@ var future = Providers.From
         handler: (args) => (args.Value + 1).ToString()
     )
     .Storage(messages)
-    .Pipe(completion => OpenAI.Chat.ChatMessage.CreateAssistantMessage(completion))
-    .Pipe(message => string.Join(string.Empty, message.Content.Where(c => c.Text != string.Empty).Select(c => c.Text)));
+    .Map(completion => OpenAI.Chat.ChatMessage.CreateAssistantMessage(completion))
+    .Map(message => string.Join(string.Empty, message.Content.Where(c => c.Text != string.Empty).Select(c => c.Text)));
 
 Console.WriteLine(future.Send("hi, please increment the value 203"));
 Console.WriteLine(future.Send("hi, please increment the value 500"));

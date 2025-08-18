@@ -23,7 +23,7 @@ public static partial class ChatCompletionExtensions
             var assistantMessage = OAI.ChatMessage.CreateAssistantMessage(completion);
             messages.Add(assistantMessage);
             return completion;
-        }, future.Token);
+        });
     }
 
     public static Future<IEnumerable<OAI.ChatMessage>, OAI.ChatCompletionOptions?, Future<OAI.StreamingChatCompletionUpdate>> Storage
@@ -44,13 +44,13 @@ public static partial class ChatCompletionExtensions
             var stream = future.Next(messages, options);
             var builder = new Streaming.CompletionBuilder();
 
-            stream.Subscribe(new()
+            stream.Subscribe(new Subscriber<OAI.StreamingChatCompletionUpdate>()
             {
-                OnNext = value => builder.Append(value),
-                OnComplete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
+                Next = (_, value) => builder.Append(value),
+                Complete = () => messages.Add(OAI.ChatMessage.CreateAssistantMessage(builder.Build()))
             });
 
             return stream;
-        }, future.Token);
+        });
     }
 }

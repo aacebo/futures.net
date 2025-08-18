@@ -4,23 +4,23 @@ namespace Futures;
 
 internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 {
-    public T Current => _values[_index];
+    public T Current => _values.Dequeue();
     object IEnumerator.Current => Current!;
 
-    protected int _index = -1;
     protected bool _complete = false;
-    protected List<T> _values;
-    protected Subscription _subscription;
+    protected Queue<T> _values;
+    protected ISubscription _subscription;
 
-    public Enumerator(Future<T> future)
+    public Enumerator(IProducer<T> producer)
     {
         _values = [];
-        _subscription = future.Subscribe(new()
+        _complete = false;
+        _subscription = producer.Subscribe(new Subscriber<T>()
         {
-            OnNext = _values.Add,
-            OnComplete = () => _complete = true,
-            OnError = (_) => _complete = true,
-            OnCancel = () => _complete = true
+            Next = (_, value) => _values.Enqueue(value),
+            Complete = () => _complete = true,
+            Error = (_) => _complete = true,
+            Cancel = () => _complete = true
         });
     }
 
@@ -43,26 +43,22 @@ internal partial class Enumerator<T> : IEnumerator<T>, IAsyncEnumerator<T>
 
     public bool MoveNext()
     {
-        _index++;
-
-        while (_index >= _values.Count && !_complete)
+        while (_values.Count == 0 && !_complete)
         {
             Task.Delay(100).Wait();
         }
 
-        return _index < _values.Count;
+        return _values.Count > 0;
     }
 
     public async ValueTask<bool> MoveNextAsync()
     {
-        _index++;
-
-        while (_index >= _values.Count && !_complete)
+        while (_values.Count == 0 && !_complete)
         {
             await Task.Delay(100);
         }
 
-        return _index < _values.Count;
+        return _values.Count > 0;
     }
 
     public void Reset()
