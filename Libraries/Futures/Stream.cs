@@ -48,7 +48,7 @@ public partial class Stream<T> : IStreamable<T>
 
         foreach (var subscriber in Consumers)
         {
-            if (subscriber == sender) continue;
+            if (subscriber.Equals(sender)) continue;
             subscriber.OnNext(sender, value);
         }
     }

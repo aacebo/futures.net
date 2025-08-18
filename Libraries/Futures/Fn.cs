@@ -60,7 +60,7 @@ public class Fn<T, TOut>
 
     public static implicit operator Func<T, TOut>(Fn<T, TOut> fn) => fn.Invoke;
     public static implicit operator Func<T, Task<TOut>>(Fn<T, TOut> fn) => v => Task.FromResult(fn.Invoke(v));
-    public static implicit operator Func<T, Future<TOut>>(Fn<T, TOut> fn) => v => Future<TOut>.From(fn.Invoke(v));
+    public static implicit operator Func<T, Future<TOut>>(Fn<T, TOut> fn) => v => Future.FromValue(fn.Invoke(v));
 }
 
 public class Fn<T1, T2, TOut>
@@ -93,7 +93,7 @@ public class Fn<T1, T2, TOut>
 
     public static implicit operator Func<T1, T2, TOut>(Fn<T1, T2, TOut> fn) => fn.Invoke;
     public static implicit operator Func<T1, T2, Task<TOut>>(Fn<T1, T2, TOut> fn) => (a, b) => Task.FromResult(fn.Invoke(a, b));
-    public static implicit operator Func<T1, T2, Future<TOut>>(Fn<T1, T2, TOut> fn) => (a, b) => Future<TOut>.From(fn.Invoke(a, b));
+    public static implicit operator Func<T1, T2, Future<TOut>>(Fn<T1, T2, TOut> fn) => (a, b) => Future.FromValue(fn.Invoke(a, b));
 }
 
 public class Fn<T1, T2, T3, TOut>
@@ -126,5 +126,5 @@ public class Fn<T1, T2, T3, TOut>
 
     public static implicit operator Func<T1, T2, T3, TOut>(Fn<T1, T2, T3, TOut> fn) => fn.Invoke;
     public static implicit operator Func<T1, T2, T3, Task<TOut>>(Fn<T1, T2, T3, TOut> fn) => (a, b, c) => Task.FromResult(fn.Invoke(a, b, c));
-    public static implicit operator Func<T1, T2, T3, Future<TOut>>(Fn<T1, T2, T3, TOut> fn) => (a, b, c) => Future<TOut>.From(fn.Invoke(a, b, c));
+    public static implicit operator Func<T1, T2, T3, Future<TOut>>(Fn<T1, T2, T3, TOut> fn) => (a, b, c) => Future.FromValue(fn.Invoke(a, b, c));
 }

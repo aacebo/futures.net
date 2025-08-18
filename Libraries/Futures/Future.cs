@@ -4,7 +4,7 @@ namespace Futures;
 /// a stream of data that returns
 /// its latest output
 /// </summary>
-public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable
+public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatable<IIdentifiable>
 {
     public T? Value { get; protected set; }
 
@@ -63,10 +63,10 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable
 
     internal T Next(object sender, T value)
     {
-        value = Transform.Invoke(value);
-        Emit(sender, value);
-        Value = value;
-        return value;
+        var @out = Transform.Invoke(value);
+        Emit(sender, @out);
+        Value = @out;
+        return @out;
     }
 
     public T Complete()
@@ -149,70 +149,5 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable
     public Future<T, TNext> Pipe<TNext>(ITransformer<T, TNext> @operator)
     {
         return @operator.Invoke(this);
-    }
-
-    public override ISubscription Subscribe(Future<T> future)
-    {
-        return base.Subscribe(future);
-    }
-
-    public override ISubscription Subscribe<TNext>(Future<T, TNext> future)
-    {
-        return base.Subscribe(future);
-    }
-
-    public static Future<T> From(T value)
-    {
-        var future = new Future<T>();
-        future.Next(value);
-        future.Complete();
-        return future;
-    }
-
-    public static Future<T> From(Exception error)
-    {
-        var future = new Future<T>();
-        future.Error(error);
-        return future;
-    }
-
-    public static Future<T> From(IEnumerable<T> enumerable)
-    {
-        return Run(future =>
-        {
-            foreach (var item in enumerable)
-            {
-                future.Next(item);
-            }
-
-            future.Complete();
-        });
-    }
-
-    public static Future<T> From(IAsyncEnumerable<T> enumerable)
-    {
-        return Run(async future =>
-        {
-            await foreach (var item in enumerable)
-            {
-                future.Next(item);
-            }
-
-            future.Complete();
-        });
-    }
-
-    public static Future<T> Run(Action<Future<T>> onInit, CancellationToken cancellation = default)
-    {
-        var future = new Future<T>(cancellation);
-        onInit(future);
-        return future;
-    }
-
-    public static Future<T> Run(Func<Future<T>, Task> onInit, CancellationToken cancellation = default)
-    {
-        var future = new Future<T>(cancellation);
-        onInit(future).ConfigureAwait(false);
-        return future;
     }
 }

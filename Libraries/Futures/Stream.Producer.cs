@@ -4,7 +4,7 @@ public partial class Stream<T> : IProducer<T>
 {
     public ISubscription Subscribe(IConsumer<T> consumer)
     {
-        var subscriber = new Subscriber<T>(consumer);
+        var subscriber = consumer is Subscriber<T> s ? s : new Subscriber<T>(consumer);
 
         subscriber.AddTearDown(() =>
         {

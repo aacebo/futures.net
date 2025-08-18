@@ -9,52 +9,46 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
     public Guid Id { get; } = Guid.NewGuid();
     public TOut? Value => Out.Value;
 
-    protected Fn<T, TOut> Transform { get; set; }
+    protected Fn<T, TOut> Selector { get; set; }
     protected Future<T> In { get; set; }
     protected Future<TOut> Out { get; set; }
 
-    public Future(Action<T, Future<TOut>> transform, CancellationToken cancellation = default)
+    public Future(Action<T, Future<TOut>> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = new(value =>
+        Selector = new(value =>
         {
             var @out = new Future<TOut>();
-            transform(value, @out);
+            select(value, @out);
             return @out.Resolve();
         });
-
-        In.Subscribe(Subscriber<T>.From(this));
     }
 
-    public Future(Func<T, Future<TOut>, Task> transform, CancellationToken cancellation = default)
+    public Future(Func<T, Future<TOut>, Task> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = new(value =>
+        Selector = new(value =>
         {
             var @out = new Future<TOut>();
-            transform(value, @out).ConfigureAwait(false);
+            select(value, @out).ConfigureAwait(false);
             return @out.Resolve();
         });
-
-        In.Subscribe(Subscriber<T>.From(this));
     }
 
-    public Future(Func<T, TOut> transform, CancellationToken cancellation = default)
+    public Future(Func<T, TOut> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = transform;
-        In.Subscribe(Subscriber<T>.From(this));
+        Selector = select;
     }
 
-    public Future(Func<T, Task<TOut>> transform, CancellationToken cancellation = default)
+    public Future(Func<T, Task<TOut>> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = transform;
-        In.Subscribe(Subscriber<T>.From(this));
+        Selector = select;
     }
 
     public TOut Next(T value)
@@ -62,10 +56,10 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
         return Next(this, value);
     }
 
-    internal TOut Next(object _, T value)
+    internal TOut Next(object sender, T value)
     {
-        var @out = Transform.Invoke(In.Next(this, value));
-        return Out.Next(this, @out);
+        var @out = Selector.Invoke(In.Next(sender, value));
+        return Out.Next(sender, @out);
     }
 
     public TOut Complete()
@@ -105,7 +99,7 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
 
     public Future<T, TOut> Clone()
     {
-        return new Future<T, TOut>(Transform.Invoke)
+        return new Future<T, TOut>(Selector.Invoke)
         {
             In = In,
             Out = Out,
@@ -119,15 +113,15 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
 
     public Future<T, TOut> Wrap(Func<T, Func<T, TOut>, TOut> selector)
     {
-        var prev = Transform;
-        Transform = new(v => selector(v, prev));
+        var prev = Selector;
+        Selector = new(v => selector(v, prev));
         return this;
     }
 
     public Future<T, TOut> Wrap(Func<T, Func<T, TOut>, Task<TOut>> selector)
     {
-        var prev = Transform;
-        Transform = new(v => selector(v, prev));
+        var prev = Selector;
+        Selector = new(v => selector(v, prev));
         return this;
     }
 
@@ -140,34 +134,6 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
     {
         return @operator.Invoke(this);
     }
-
-    public static Future<T, TOut> Run(Action<Future<T, TOut>> onInit, Func<T, TOut> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T, TOut>(transform, cancellation);
-        onInit(future);
-        return future;
-    }
-
-    public static Future<T, TOut> Run(Func<Future<T, TOut>, Task> onInit, Func<T, TOut> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T, TOut>(transform, cancellation);
-        onInit(future).ConfigureAwait(false);
-        return future;
-    }
-
-    public static Future<T, TOut> Run(Action<Future<T, TOut>> onInit, Func<T, Task<TOut>> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T, TOut>(transform, cancellation);
-        onInit(future);
-        return future;
-    }
-
-    public static Future<T, TOut> Run(Func<Future<T, TOut>, Task> onInit, Func<T, Task<TOut>> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T, TOut>(transform, cancellation);
-        onInit(future).ConfigureAwait(false);
-        return future;
-    }
 }
 
 /// <summary>
@@ -179,46 +145,46 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
     public Guid Id { get; } = Guid.NewGuid();
     public TOut? Value => Out.Value;
 
-    protected Fn<T1, T2, TOut> Transform { get; set; }
+    protected Fn<T1, T2, TOut> Selector { get; set; }
     protected Future<(T1, T2)> In { get; set; }
     protected Future<TOut> Out { get; set; }
 
-    public Future(Action<T1, T2, Future<TOut>> transform, CancellationToken cancellation = default)
+    public Future(Action<T1, T2, Future<TOut>> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = new((a, b) =>
+        Selector = new((a, b) =>
         {
             var @out = new Future<TOut>();
-            transform(a, b, @out);
+            select(a, b, @out);
             return @out.Resolve();
         });
     }
 
-    public Future(Func<T1, T2, Future<TOut>, Task> transform, CancellationToken cancellation = default)
+    public Future(Func<T1, T2, Future<TOut>, Task> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = new((a, b) =>
+        Selector = new((a, b) =>
         {
             var @out = new Future<TOut>();
-            transform(a, b, @out).ConfigureAwait(false);
+            select(a, b, @out).ConfigureAwait(false);
             return @out.Resolve();
         });
     }
 
-    public Future(Func<T1, T2, TOut> transform, CancellationToken cancellation = default)
+    public Future(Func<T1, T2, TOut> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = transform;
+        Selector = select;
     }
 
-    public Future(Func<T1, T2, Task<TOut>> transform, CancellationToken cancellation = default)
+    public Future(Func<T1, T2, Task<TOut>> select, CancellationToken cancellation = default)
     {
         In ??= new(cancellation);
         Out ??= new(cancellation);
-        Transform = transform;
+        Selector = select;
     }
 
     public TOut Next(T1 a, T2 b)
@@ -226,11 +192,11 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
         return Next(this, a, b);
     }
 
-    internal TOut Next(object _, T1 a, T2 b)
+    internal TOut Next(object sender, T1 a, T2 b)
     {
-        (a, b) = In.Next(this, (a, b));
-        var @out = Transform.Invoke(a, b);
-        return Out.Next(this, @out);
+        (a, b) = In.Next(sender, (a, b));
+        var @out = Selector.Invoke(a, b);
+        return Out.Next(sender, @out);
     }
 
     public TOut Complete()
@@ -270,7 +236,7 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
 
     public Future<T1, T2, TOut> Clone()
     {
-        return new Future<T1, T2, TOut>(Transform.Invoke)
+        return new Future<T1, T2, TOut>(Selector.Invoke)
         {
             In = In,
             Out = Out,
@@ -284,15 +250,15 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
 
     public Future<T1, T2, TOut> Wrap(Func<T1, T2, Func<T1, T2, TOut>, TOut> selector)
     {
-        var prev = Transform;
-        Transform = new((a, b) => selector(a, b, prev));
+        var prev = Selector;
+        Selector = new((a, b) => selector(a, b, prev));
         return this;
     }
 
     public Future<T1, T2, TOut> Wrap(Func<T1, T2, Func<T1, T2, TOut>, Task<TOut>> selector)
     {
-        var prev = Transform;
-        Transform = new((a, b) => selector(a, b, prev));
+        var prev = Selector;
+        Selector = new((a, b) => selector(a, b, prev));
         return this;
     }
 
@@ -304,33 +270,5 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
     public Future<T1, T2, TNext> Pipe<TNext>(ITransformer<T1, T2, TOut, TNext> @operator)
     {
         return @operator.Invoke(this);
-    }
-
-    public static Future<T1, T2, TOut> Run(Action<Future<T1, T2, TOut>> onInit, Func<T1, T2, TOut> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T1, T2, TOut>(transform, cancellation);
-        onInit(future);
-        return future;
-    }
-
-    public static Future<T1, T2, TOut> Run(Func<Future<T1, T2, TOut>, Task> onInit, Func<T1, T2, TOut> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T1, T2, TOut>(transform, cancellation);
-        onInit(future).ConfigureAwait(false);
-        return future;
-    }
-
-    public static Future<T1, T2, TOut> Run(Action<Future<T1, T2, TOut>> onInit, Func<T1, T2, Task<TOut>> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T1, T2, TOut>(transform, cancellation);
-        onInit(future);
-        return future;
-    }
-
-    public static Future<T1, T2, TOut> Run(Func<Future<T1, T2, TOut>, Task> onInit, Func<T1, T2, Task<TOut>> transform, CancellationToken cancellation = default)
-    {
-        var future = new Future<T1, T2, TOut>(transform, cancellation);
-        onInit(future).ConfigureAwait(false);
-        return future;
     }
 }

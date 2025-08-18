@@ -7,15 +7,16 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable
     public Action<Exception>? Error { get; set; }
     public Action? Cancel { get; set; }
 
-    internal Guid Id { get; set; } = Guid.NewGuid();
+    internal Guid Id { get; set; }
 
     public Subscriber() : base()
     {
-
+        Id = Guid.NewGuid();
     }
 
     public Subscriber(IConsumer<T> destination) : base()
     {
+        Id = Guid.NewGuid();
         Next = destination.OnNext;
         Complete = destination.OnComplete;
         Error = destination.OnError;

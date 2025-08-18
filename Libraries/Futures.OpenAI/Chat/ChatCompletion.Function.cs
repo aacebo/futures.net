@@ -84,7 +84,7 @@ public static partial class ChatCompletionExtensions
 
             return updates.MergeMap(update =>
             {
-                var next = Future<OAI.StreamingChatCompletionUpdate>.From(update);
+                var next = Future.FromValue(update);
                 Console.WriteLine($"stream update: {update.CompletionId}");
                 builder.Append(update);
 
