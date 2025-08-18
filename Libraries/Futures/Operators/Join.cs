@@ -4,12 +4,12 @@ public static partial class Future
 {
     public static Future<T, TOut> Join<T, TOut>(Future<T> a, Future<T, TOut> b)
     {
-        return new Future<T, TOut>(value => b.Next(a.Next(value)));
+        return new Future<T, TOut>(value => b.Select(a.Select(value)));
     }
 
     public static Future<T, TNext> Join<T, TOut, TNext>(Future<T, TOut> a, Future<TOut, TNext> b)
     {
-        return new Future<T, TNext>(value => b.Next(a.Next(value)));
+        return new Future<T, TNext>(value => b.Select(a.Select(value)));
     }
 }
 

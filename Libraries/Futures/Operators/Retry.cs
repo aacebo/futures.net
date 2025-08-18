@@ -12,7 +12,7 @@ public sealed class Retry<T>(int attempts = 3, int delay = 0) : IOperator<T>
             {
                 try
                 {
-                    dest.Next(src.Next(value));
+                    dest.Next(src.Select(value));
                     dest.Complete();
                     return;
                 }
@@ -41,7 +41,7 @@ public sealed class Retry<T, TOut>(int attempts = 3, int delay = 0) : IOperator<
             {
                 try
                 {
-                    dest.Next(src.Next(value));
+                    dest.Next(src.Select(value));
                     dest.Complete();
                     return;
                 }
@@ -70,7 +70,7 @@ public sealed class Retry<T1, T2, TOut>(int attempts = 3, int delay = 0) : IOper
             {
                 try
                 {
-                    dest.Next(src.Next(a, b));
+                    dest.Next(src.Select(a, b));
                     dest.Complete();
                     return;
                 }

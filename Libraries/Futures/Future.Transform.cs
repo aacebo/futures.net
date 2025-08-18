@@ -23,6 +23,8 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
             select(value, @out);
             return @out.Resolve();
         });
+
+        In.Subscribe(this);
     }
 
     public Future(Func<T, Future<TOut>, Task> select, CancellationToken cancellation = default)
@@ -35,6 +37,8 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
             select(value, @out).ConfigureAwait(false);
             return @out.Resolve();
         });
+
+        In.Subscribe(this);
     }
 
     public Future(Func<T, TOut> select, CancellationToken cancellation = default)
@@ -42,6 +46,7 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
         In ??= new(cancellation);
         Out ??= new(cancellation);
         Selector = select;
+        In.Subscribe(this);
     }
 
     public Future(Func<T, Task<TOut>> select, CancellationToken cancellation = default)
@@ -49,6 +54,7 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
         In ??= new(cancellation);
         Out ??= new(cancellation);
         Selector = select;
+        In.Subscribe(this);
     }
 
     public TOut Next(T value)
@@ -60,6 +66,11 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
     {
         var @out = Selector.Invoke(In.Next(sender, value));
         return Out.Next(sender, @out);
+    }
+
+    internal TOut Select(T value)
+    {
+        return Selector.Invoke(value);
     }
 
     public TOut Complete()
@@ -197,6 +208,11 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
         (a, b) = In.Next(sender, (a, b));
         var @out = Selector.Invoke(a, b);
         return Out.Next(sender, @out);
+    }
+
+    internal TOut Select(T1 a, T2 b)
+    {
+        return Selector.Invoke(a, b);
     }
 
     public TOut Complete()

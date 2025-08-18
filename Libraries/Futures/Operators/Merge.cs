@@ -4,11 +4,10 @@ public static partial class Future
 {
     public static Future<T> Merge<T>(Future<T> a, Future<T> b)
     {
-        return new Future<T>((value, dest) =>
+        return new Future<T>().Run(self =>
         {
-            dest.Next(a.Next(value));
-            dest.Next(b.Next(value));
-            dest.Complete();
+            a.Subscribe(self);
+            b.Subscribe(self);
         });
     }
 
@@ -16,8 +15,8 @@ public static partial class Future
     {
         return new Future<T, TOut>((value, dest) =>
         {
-            dest.Next(a.Next(value));
-            dest.Next(b.Next(value));
+            dest.Next(a.Select(value));
+            dest.Next(b.Select(value));
             dest.Complete();
         });
     }
@@ -26,8 +25,8 @@ public static partial class Future
     {
         return new Future<T1, T2, TOut>((one, two, dest) =>
         {
-            dest.Next(a.Next(one, two));
-            dest.Next(b.Next(one, two));
+            dest.Next(a.Select(one, two));
+            dest.Next(b.Select(one, two));
             dest.Complete();
         });
     }

@@ -19,8 +19,6 @@ public class MergeTests
         }
 
         Assert.Equal("9", merged.Complete());
-        Assert.Equal("9", a.Complete());
-        Assert.Equal("9", b.Complete());
         Assert.Equal(9, input.Complete());
     }
 }

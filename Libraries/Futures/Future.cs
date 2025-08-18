@@ -8,7 +8,7 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatab
 {
     public T? Value { get; protected set; }
 
-    protected Fn<T, T> Transform { get; set; } = new(v => v);
+    protected Fn<T, T> Selector { get; set; } = new(v => v);
 
     private readonly TaskCompletionSource<T> _task;
 
@@ -22,38 +22,38 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatab
         _task = new(stream.Token);
     }
 
-    public Future(Action<T, Future<T>> transform, CancellationToken cancellation = default) : base(cancellation)
+    public Future(Action<T, Future<T>> select, CancellationToken cancellation = default) : base(cancellation)
     {
         _task = new(cancellation);
-        Transform = new(value =>
+        Selector = new(value =>
         {
             var @out = new Future<T>();
-            transform(value, @out);
+            select(value, @out);
             return @out.Resolve();
         });
     }
 
-    public Future(Func<T, Future<T>, Task> transform, CancellationToken cancellation = default) : base(cancellation)
+    public Future(Func<T, Future<T>, Task> select, CancellationToken cancellation = default) : base(cancellation)
     {
         _task = new(cancellation);
-        Transform = new(value =>
+        Selector = new(value =>
         {
             var @out = new Future<T>();
-            transform(value, @out);
+            select(value, @out);
             return @out.Resolve();
         });
     }
 
-    public Future(Func<T, T> transform, CancellationToken cancellation = default) : base(cancellation)
+    public Future(Func<T, T> select, CancellationToken cancellation = default) : base(cancellation)
     {
         _task = new(cancellation);
-        Transform = transform;
+        Selector = select;
     }
 
-    public Future(Func<T, Task<T>> transform, CancellationToken cancellation = default) : base(cancellation)
+    public Future(Func<T, Task<T>> select, CancellationToken cancellation = default) : base(cancellation)
     {
         _task = new(cancellation);
-        Transform = transform;
+        Selector = select;
     }
 
     public T Next(T value)
@@ -63,10 +63,15 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatab
 
     internal T Next(object sender, T value)
     {
-        var @out = Transform.Invoke(value);
+        var @out = Selector.Invoke(value);
         Emit(sender, @out);
         Value = @out;
         return @out;
+    }
+
+    internal T Select(T value)
+    {
+        return Selector.Invoke(value);
     }
 
     public T Complete()
@@ -117,7 +122,7 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatab
 
     public Future<T> Clone()
     {
-        var future = new Future<T>(Transform.Invoke);
+        var future = new Future<T>(Selector.Invoke);
         Wrap((value, select) => future.Next(value));
         return future;
     }
@@ -127,17 +132,17 @@ public partial class Future<T> : Stream<T>, IStreamable<T>, ICloneable, IEquatab
         return Clone();
     }
 
-    public Future<T> Wrap(Func<T, Func<T, T>, T> selector)
+    public Future<T> Wrap(Func<T, Func<T, T>, T> select)
     {
-        var prev = Transform;
-        Transform = new(v => selector(v, prev));
+        var prev = Selector;
+        Selector = new(v => select(v, prev));
         return this;
     }
 
-    public Future<T> Wrap(Func<T, Func<T, T>, Task<T>> selector)
+    public Future<T> Wrap(Func<T, Func<T, T>, Task<T>> select)
     {
-        var prev = Transform;
-        Transform = new(v => selector(v, prev));
+        var prev = Selector;
+        Selector = new(v => select(v, prev));
         return this;
     }
 

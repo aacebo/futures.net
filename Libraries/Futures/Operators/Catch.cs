@@ -8,7 +8,7 @@ public sealed class Catch<T>(Fn<Exception, T, Future<T>, T> selector) : IOperato
         {
             try
             {
-                dest.Next(src.Next(value));
+                dest.Next(src.Select(value));
             }
             catch (Exception error)
             {
@@ -28,7 +28,7 @@ public sealed class Catch<T, TOut>(Fn<Exception, T, Future<T, TOut>, TOut> selec
         {
             try
             {
-                dest.Next(src.Next(value));
+                dest.Next(src.Select(value));
             }
             catch (Exception error)
             {
@@ -48,7 +48,7 @@ public sealed class Catch<T1, T2, TOut>(Fn<Exception, (T1, T2), Future<T1, T2, T
         {
             try
             {
-                dest.Next(src.Next(a, b));
+                dest.Next(src.Select(a, b));
             }
             catch (Exception error)
             {

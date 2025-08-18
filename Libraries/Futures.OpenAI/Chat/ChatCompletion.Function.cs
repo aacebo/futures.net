@@ -96,11 +96,10 @@ public static partial class ChatCompletionExtensions
                 if (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
                 {
                     var message = OAI.ChatMessage.CreateAssistantMessage(builder.Build());
+                    messages = messages.Append(message);
 
                     while (message.ToolCalls.Any())
                     {
-                        messages = messages.Append(message);
-
                         foreach (var call in message.ToolCalls)
                         {
                             Console.WriteLine($"tool call: {call.Id}");
@@ -111,6 +110,7 @@ public static partial class ChatCompletionExtensions
 
                         var updates = Send(messages, options);
                         message = OAI.ChatMessage.CreateAssistantMessage(Streaming.CompletionBuilder.From(updates).Build());
+                        messages = messages.Append(message);
                     }
 
                     return Send(messages, options);

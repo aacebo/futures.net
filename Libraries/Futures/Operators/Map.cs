@@ -4,7 +4,7 @@ public sealed class Map<T, TNext>(Fn<T, TNext> selector) : ITransformer<T, TNext
 {
     public Future<T, TNext> Invoke(Future<T> src)
     {
-        return new Future<T, TNext>(value => selector.Invoke(src.Next(value)));
+        return new Future<T, TNext>(value => selector.Invoke(src.Select(value)));
     }
 }
 
@@ -12,7 +12,7 @@ public sealed class Map<T, TOut, TNext>(Fn<TOut, TNext> selector) : ITransformer
 {
     public Future<T, TNext> Invoke(Future<T, TOut> src)
     {
-        return new Future<T, TNext>(value => selector.Invoke(src.Next(value)));
+        return new Future<T, TNext>(value => selector.Invoke(src.Select(value)));
     }
 }
 
@@ -20,7 +20,7 @@ public sealed class Map<T1, T2, TOut, TNext>(Fn<TOut, TNext> selector) : ITransf
 {
     public Future<T1, T2, TNext> Invoke(Future<T1, T2, TOut> src)
     {
-        return new Future<T1, T2, TNext>((a, b) => selector.Invoke(src.Next(a, b)));
+        return new Future<T1, T2, TNext>((a, b) => selector.Invoke(src.Select(a, b)));
     }
 }
 

@@ -6,7 +6,7 @@ public sealed class MergeMap<T, TNext>(Fn<T, Future<TNext>> selector) : ITransfo
     {
         return new Future<T, TNext>((value, dest) =>
         {
-            var @out = selector.Invoke(src.Next(value));
+            var @out = selector.Invoke(src.Select(value));
 
             foreach (var item in @out)
             {
@@ -24,7 +24,7 @@ public sealed class MergeMap<T, TOut, TNext>(Fn<TOut, Future<TNext>> selector) :
     {
         return new Future<T, TNext>((value, dest) =>
         {
-            var @out = selector.Invoke(src.Next(value));
+            var @out = selector.Invoke(src.Select(value));
 
             foreach (var item in @out)
             {
@@ -42,7 +42,7 @@ public sealed class MergeMap<T1, T2, TOut, TNext>(Fn<TOut, Future<TNext>> select
     {
         return new Future<T1, T2, TNext>((a, b, dest) =>
         {
-            var @out = selector.Invoke(src.Next(a, b));
+            var @out = selector.Invoke(src.Select(a, b));
 
             foreach (var item in @out)
             {

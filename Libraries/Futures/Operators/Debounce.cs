@@ -14,7 +14,7 @@ public sealed class Debounce<T>(TimeSpan time) : IOperator<T>
             _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
             {
                 if (task.IsCanceled) return;
-                destination.Next(src.Next(value));
+                destination.Next(src.Select(value));
                 destination.Complete();
             });
         });
@@ -35,7 +35,7 @@ public sealed class Debounce<T, TOut>(TimeSpan time) : IOperator<T, TOut>
             _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
             {
                 if (task.IsCanceled) return;
-                destination.Next(src.Next(value));
+                destination.Next(src.Select(value));
                 destination.Complete();
             });
         });
@@ -56,7 +56,7 @@ public sealed class Debounce<T1, T2, TOut>(TimeSpan time) : IOperator<T1, T2, TO
             _ = Task.Delay(time, cancellation.Token).ContinueWith(task =>
             {
                 if (task.IsCanceled) return;
-                destination.Next(src.Next(a, b));
+                destination.Next(src.Select(a, b));
                 destination.Complete();
             });
         });

@@ -6,7 +6,7 @@ public sealed class Do<T>(Fn<T> selector) : IOperator<T>
     {
         return new Future<T>((value, dest) =>
         {
-            var @out = src.Next(value);
+            var @out = src.Select(value);
             selector.Invoke(@out);
             dest.Next(@out);
             dest.Complete();
@@ -20,7 +20,7 @@ public sealed class Do<T, TOut>(Fn<TOut> selector) : IOperator<T, TOut>
     {
         return new Future<T, TOut>((value, dest) =>
         {
-            var @out = src.Next(value);
+            var @out = src.Select(value);
             selector.Invoke(@out);
             dest.Next(@out);
             dest.Complete();
@@ -34,7 +34,7 @@ public sealed class Do<T1, T2, TOut>(Fn<TOut> selector) : IOperator<T1, T2, TOut
     {
         return new Future<T1, T2, TOut>((a, b, dest) =>
         {
-            var @out = src.Next(a, b);
+            var @out = src.Select(a, b);
             selector.Invoke(@out);
             dest.Next(@out);
             dest.Complete();
