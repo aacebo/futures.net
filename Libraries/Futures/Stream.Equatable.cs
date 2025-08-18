@@ -1,15 +1,15 @@
 namespace Futures;
 
-public partial class Stream<T> : IEquatable<Stream<T>>
+public partial class Stream<T> : IEquatable<IIdentifiable>
 {
-    public bool Equals(Stream<T>? other)
+    public bool Equals(IIdentifiable? other)
     {
         return Id == other?.Id;
     }
 
     public override bool Equals(object? obj)
     {
-        return Equals(obj as Stream<T>);
+        return Equals(obj as IIdentifiable);
     }
 
     public override int GetHashCode()
@@ -17,6 +17,6 @@ public partial class Stream<T> : IEquatable<Stream<T>>
         return Id.GetHashCode();
     }
 
-    public static bool operator ==(Stream<T> left, Stream<T> right) => left.Equals(right);
-    public static bool operator !=(Stream<T> left, Stream<T> right) => !left.Equals(right);
+    public static bool operator ==(Stream<T> left, IIdentifiable right) => left.Equals(right);
+    public static bool operator !=(Stream<T> left, IIdentifiable right) => !left.Equals(right);
 }

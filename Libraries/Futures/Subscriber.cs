@@ -1,6 +1,6 @@
 namespace Futures;
 
-public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable<Stream<T>>
+public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable<IIdentifiable>
 {
     public Action<object, T>? Next { get; set; }
     public Action? Complete { get; set; }
@@ -72,14 +72,14 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable
         }
     }
 
-    public bool Equals(Stream<T>? other)
+    public bool Equals(IIdentifiable? other)
     {
         return Id == other?.Id;
     }
 
     public override bool Equals(object? obj)
     {
-        return Equals(obj as Stream<T>);
+        return Equals(obj as IIdentifiable);
     }
 
     public override int GetHashCode()
@@ -96,6 +96,6 @@ public class Subscriber<T> : Subscription, IConsumer<T>, IDisposable, IEquatable
         };
     }
 
-    public static bool operator ==(Subscriber<T> left, Stream<T> right) => left.Equals(right);
-    public static bool operator !=(Subscriber<T> left, Stream<T> right) => !left.Equals(right);
+    public static bool operator ==(Subscriber<T> left, IIdentifiable right) => left.Equals(right);
+    public static bool operator !=(Subscriber<T> left, IIdentifiable right) => !left.Equals(right);
 }

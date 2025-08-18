@@ -4,7 +4,7 @@ namespace Futures;
 /// a stream of data that acts as
 /// an emitter (send and forget)
 /// </summary>
-public partial class Stream<T>
+public partial class Stream<T> : IStreamable<T>
 {
     public Guid Id { get; } = Guid.NewGuid();
     public State State { get; protected set; } = State.NotStarted;
