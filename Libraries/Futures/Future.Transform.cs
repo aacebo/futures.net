@@ -9,9 +9,9 @@ public partial class Future<T, TOut> : ICloneable, IStreamable<TOut>
     public Guid Id { get; } = Guid.NewGuid();
     public TOut? Value => Out.Value;
 
+    internal Future<T> In { get; set; }
+    internal Future<TOut> Out { get; set; }
     protected Fn<T, TOut> Selector { get; set; }
-    protected Future<T> In { get; set; }
-    protected Future<TOut> Out { get; set; }
 
     public Future(Action<T, Future<TOut>> select, CancellationToken cancellation = default)
     {
@@ -156,9 +156,9 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
     public Guid Id { get; } = Guid.NewGuid();
     public TOut? Value => Out.Value;
 
+    internal Future<(T1, T2)> In { get; set; }
+    internal Future<TOut> Out { get; set; }
     protected Fn<T1, T2, TOut> Selector { get; set; }
-    protected Future<(T1, T2)> In { get; set; }
-    protected Future<TOut> Out { get; set; }
 
     public Future(Action<T1, T2, Future<TOut>> select, CancellationToken cancellation = default)
     {
@@ -201,6 +201,11 @@ public partial class Future<T1, T2, TOut> : ICloneable, IStreamable<TOut>
     public TOut Next(T1 a, T2 b)
     {
         return Next(this, a, b);
+    }
+
+    internal TOut Next(object sender, (T1, T2) value)
+    {
+        return Next(sender, value.Item1, value.Item2);
     }
 
     internal TOut Next(object sender, T1 a, T2 b)
