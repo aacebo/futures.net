@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Futures.Operators;
 
 using OAI = OpenAI.Chat;
@@ -48,6 +46,11 @@ public partial class Request
         return req;
     }
 
+    public Future<OAI.ChatCompletion> Build()
+    {
+
+    }
+
     public Future<OAI.ChatCompletion> Send(params OAI.ChatMessage[] messages)
     {
         return Send(messages.AsEnumerable());
@@ -74,17 +77,7 @@ public partial class Request
             while (completion.FinishReason == OAI.ChatFinishReason.ToolCalls)
             {
                 List<OAI.ChatMessage> messages = [.. storage, OAI.ChatMessage.CreateAssistantMessage(completion)];
-
-                foreach (var call in completion.ToolCalls)
-                {
-                    if (_handlers.TryGetValue(call.FunctionName, out var handler))
-                    {
-                        var res = handler(call);
-                        var str = JsonSerializer.Serialize(res);
-                        messages.Add(OAI.ChatMessage.CreateToolMessage(call.Id, str));
-                    }
-                }
-
+                messages.AddRange(Call([.. completion.ToolCalls]));
                 completion = _client.CompleteChat(messages, options ?? _options, cancellation);
             }
 
@@ -105,12 +98,30 @@ public partial class Request
 
     public Future<OAI.StreamingChatCompletionUpdate> SendStream(IEnumerable<OAI.ChatMessage> messages, OAI.ChatCompletionOptions? options = null, CancellationToken cancellation = default)
     {
+        var storage = _storage ?? [];
+
+        foreach (var message in messages)
+        {
+            storage.Add(message);
+        }
+
         return new Future<OAI.StreamingChatCompletionUpdate>().Run(self =>
         {
             var res = _client.CompleteChatStreaming(messages, options ?? _options, cancellation);
+            var builder = new Streaming.CompletionBuilder();
 
             foreach (var update in res)
             {
+                builder = builder.Append(update);
+                var completion = builder.Build();
+
+                while (update.FinishReason == OAI.ChatFinishReason.ToolCalls)
+                {
+                    List<OAI.ChatMessage> messages = [.. storage, OAI.ChatMessage.CreateAssistantMessage(completion)];
+                    messages.AddRange(Call([.. completion.ToolCalls]));
+                    completion = _client.CompleteChat(messages, options ?? _options, cancellation);
+                }
+
                 self.Next(update);
             }
 

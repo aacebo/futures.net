@@ -8,8 +8,7 @@ using Samples.Functions;
 
 var messages = new List<OpenAI.Chat.ChatMessage>();
 var client = new OpenAIClient(Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
-var future = Providers.From
-    .Chat(client.GetChatClient("gpt-3.5-turbo"))
+var future = new Request(client.GetChatClient("gpt-3.5-turbo"))
     .Function<Params>(
         "increment",
         "increment a given value",

@@ -57,4 +57,21 @@ public partial class Request
             strict
         );
     }
+
+    protected IEnumerable<OAI.ChatMessage> Call(params OAI.ChatToolCall[] calls)
+    {
+        List<OAI.ChatMessage> messages = [];
+
+        foreach (var call in calls)
+        {
+            if (_handlers.TryGetValue(call.FunctionName, out var handler))
+            {
+                var res = handler(call);
+                var str = JsonSerializer.Serialize(res);
+                messages.Add(OAI.ChatMessage.CreateToolMessage(call.Id, str));
+            }
+        }
+
+        return messages;
+    }
 }
