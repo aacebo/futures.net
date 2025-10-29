@@ -1,2 +1,9 @@
+model: gpt-4o
+parent: https://github.com/aacebo/futures.io
+documentation: https://github.com/aacebo/futures.doc
+features:
+  issues: true
+  discussions: true
+  pull_requests: true
 index:
   - ./Libraries/**/*.cs
