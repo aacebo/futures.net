@@ -6,4 +6,4 @@ features:
   discussions: true
   pull_requests: true
 index:
-  - ./Libraries/**/*.cs
+  - Libraries/**/*.cs
